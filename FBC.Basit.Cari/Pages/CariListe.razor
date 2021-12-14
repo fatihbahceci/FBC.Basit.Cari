@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using  Microsoft.EntityFrameworkCore;
+@using Microsoft.EntityFrameworkCore;
 <PageTitle>Cari Liste</PageTitle>
 
 
@@ -22,30 +22,74 @@
 }
 else
 {
+    <div class="row">
+        <CheckBox @bind-Data="bakiyesiOlmayanlariGizle" Title="Bakiyesi olmayanları gizle" />
+    </div>
     <table class="table">
         <thead>
             <tr>
                 <th>Id</th>
                 <th>İsim</th>
+                <th>Borç</th>
+                <th>Alacak</th>
+                <th>Bakiye</th>
                 <th>İşlemler</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in liste)
             {
-                <tr>
-                    <td>@item.CariKartId</td>
+                if (!bakiyesiOlmayanlariGizle || (bakiyesiOlmayanlariGizle && item.Bakiye != 0))
+                {
+                    <tr>
+                        <td>@item.CariKartId</td>
                     <td>@item.Isim</td>
+                    <td>@($"₺{item.Borc:n}")</td>
+                    <td>@($"₺{item.Alacak:n}")</td>
+                    <td>@($"₺{item.Bakiye:n}")</td>
                     <td><a href="/cari/goster/@item.CariKartId">Aç</a></td>
                 </tr>
+                }
             }
         </tbody>
     </table>
+   <div class="container px-5 my-5">
+            @{
+                var toplamBorc = liste.Sum(x => x.Borc);
+                var toplamAlacak = liste.Sum(x => x.Alacak);
+            }
+            <table class="table">
+                <tr>
+                    <th>Toplam Borç</th>
+                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+                </tr>
+                <tr>
+                    <th>Toplam Alacak</th>
+                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+                </tr>
+                <tr>
+                    <th>Bakiye</th>
+                    <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
+                </tr>
+            </table>
+        </div>
 }
 
 @code {
-    private List<CariKart>? liste;
+
+    class CariOzet
+    {
+        public int CariKartId { get; set; }
+        public string Isim { get; set; }
+        public decimal Borc { get; set; }
+        public decimal Alacak { get; set; }
+        public decimal Bakiye { get => Alacak - Borc; }
+
+    }
+
+    private List<CariOzet>? liste;
     private string yeniCariIsim;
+    private bool bakiyesiOlmayanlariGizle;
 
     private void Ekle()
     {
@@ -73,7 +117,15 @@ else
 
         using (var db = new DB())
         {
-            liste = db.CariKart.AsNoTracking().ToList();  // await ForecastService.GetForecastAsync(DateTime.Now);
+            liste = db.CariKart.AsNoTracking().Include(p => p.Hareketler)//.OrderBy(x=> x.Isim)
+            .ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
+            .Select(x => new CariOzet()
+                {
+                    CariKartId = x.CariKartId,
+                    Isim = x.Isim,
+                    Borc = x.Hareketler.Sum(x => x.Borc),
+                    Alacak = x.Hareketler.Sum(x => x.Alacak)
+                }).OrderByDescending(p => p.Bakiye).ToList();
             InvokeAsync(() => StateHasChanged());
 
         }

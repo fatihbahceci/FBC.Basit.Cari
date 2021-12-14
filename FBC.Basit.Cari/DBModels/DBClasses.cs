@@ -22,6 +22,7 @@ namespace FBC.Basit.Cari.DBModels
         public int CariHareketId { get; set; }
         public DateTime? Tarih { get; set; }
         public string? Aciklama { get; set; }
+        public string? EvrakNo { get; set; }
         public decimal Borc { get; set; }
         public decimal Alacak { get; set; }
         public DateTime? VadeTarihi { get; set; }
@@ -40,9 +41,12 @@ namespace FBC.Basit.Cari.DBModels
 
         public DB()
         {
-            var folder = Environment.SpecialFolder.LocalApplicationData;
-            var path = Environment.GetFolderPath(folder);
-            DbPath = Path.Join(path, "basitcari.db");
+
+            //var folder = Environment.SpecialFolder.LocalApplicationData;
+            //var path = Environment.GetFolderPath(folder);
+            //DbPath = Path.Join(path, "basitcari.db");
+
+            DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "basitcari.db");
         }
         static DB()
         {
