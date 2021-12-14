@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31825.309
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FBC.Basit.Cari", "FBC.Basit.Cari\FBC.Basit.Cari.csproj", "{D764DD82-80FC-41A0-AD94-8690A8B3532C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E82C1FEF-1016-4BF8-98C1-2F1C31B88594}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D764DD82-80FC-41A0-AD94-8690A8B3532C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D764DD82-80FC-41A0-AD94-8690A8B3532C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D764DD82-80FC-41A0-AD94-8690A8B3532C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D764DD82-80FC-41A0-AD94-8690A8B3532C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EB20FD4D-B60C-465A-951C-34DA731EEEA4}
+	EndGlobalSection
+EndGlobal

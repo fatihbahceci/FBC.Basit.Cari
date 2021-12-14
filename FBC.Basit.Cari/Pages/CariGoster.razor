@@ -1,0 +1,108 @@
+﻿@page "/cari/goster/{Id:int}"
+@using Microsoft.EntityFrameworkCore;
+@if (model == null)
+{
+    <PageTitle>Cari Göster - Kayıt Bulunamadı!</PageTitle>
+    <h1>Kayıt Bulunamadı!</h1>
+}
+else
+{
+
+    <PageTitle>Cari Göster - @model.Isim</PageTitle>
+    <h1>@model.Isim</h1>
+
+    <div class="container px-5 my-5">
+        <DatePicker @bind-Data="hareket.Tarih" Title="Tarih" />
+        <TextBox @bind-Data="hareket.Aciklama" Title="Aciklama" />
+        <TextBox @bind-Data="hareket.Borc" Title="Borc" />
+        <TextBox @bind-Data="hareket.Alacak" Title="Alacak" />
+        <DatePicker @bind-Data="hareket.VadeTarihi" Title="VadeTarihi" />
+
+        <div class="d-grid">
+            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
+        </div>
+    </div>
+
+
+
+    @if (model.Hareketler != null)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Tarih</th>
+                    <th>Aciklama</th>
+                    <th>Borc</th>
+                    <th>Alacak</th>
+                    <th>VadeTarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in model.Hareketler)
+                {
+                    <tr>
+                        <td>@item.CariHareketId</td>
+                        <td>@item.Tarih</td>
+                        <td>@item.Aciklama</td>
+                        <td>@item.Borc</td>
+                        <td>@item.Alacak</td>
+                        <td>@item.VadeTarihi</td>
+                        <td><a href="/cari/goster/@item.CariHareketId">Aç</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    }
+}
+
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private CariKart model;
+    private CariHareket hareket = new CariHareket();
+
+    private void Ekle()
+    {
+        if (hareket != null && (hareket.Borc > 0 || hareket.Alacak > 0))
+        {
+            hareket.CariKartId = model.CariKartId;
+            using (var db = new DB())
+            {
+
+                db.CariHareket.Add(hareket);
+                db.SaveChanges();
+            }
+            RefreshList();
+            hareket = new CariHareket();
+
+        }
+        else
+        {
+
+        }
+    }
+
+    private void RefreshList()
+    {
+        using (var db = new DB())
+        {
+            model = db.CariKart.AsNoTracking()
+            .Include(x => x.Hareketler)
+            .Where(x => x.CariKartId == Id)
+            .FirstOrDefault();
+        }
+        InvokeAsync(() => StateHasChanged());
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        RefreshList();
+    }
+}

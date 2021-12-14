@@ -1,0 +1,30 @@
+﻿@namespace FBC.FormControls
+@using System.ComponentModel
+@typeparam T
+
+@inherits FormControlBase<T?>
+@*@inherits FormControlBase*@
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        @*https://stackoverflow.com/a/64827072/4546246*@
+        <textarea class="form-control"
+                  id="@base.Id" type="text"
+                  placeholder="@base.Title"
+                  @oninput="HandleOnChange"
+                  style="height: 10rem;">
+            @base.Data
+            </textarea>
+        <label for="@base.Id">@base.Title</label>
+
+    </Content>
+</FormControlPanel>
+@code {
+    ///OnInputChange
+    private async Task HandleOnChange(ChangeEventArgs args)
+    {
+        //https://stackoverflow.com/a/8633/4546246
+        //Data = (T)Convert.ChangeType(args.Value, typeof(T));
+        await base.OnInputChange(args);
+        //await ChildDataChanged.InvokeAsync(data);
+    }
+}

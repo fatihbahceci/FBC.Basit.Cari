@@ -1,0 +1,19 @@
+﻿@namespace FBC.FormControls
+@typeparam T
+@inherits FormControlBase<T>
+
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <select class="form-select" @bind="base.Data" id="@base.Id" aria-label="@base.Title" @oninput="OnInputChange">
+            @foreach (T item in Enum.GetValues(typeof(T)))
+            {
+                <option value="@item">@((item as Enum).GetEnumDescription())</option>
+            }
+        </select>
+        <label for="@base.Id">@base.Title</label>
+    </Content>
+</FormControlPanel>
+
+@code {
+
+}

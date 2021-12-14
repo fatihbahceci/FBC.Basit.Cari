@@ -1,0 +1,15 @@
+﻿@namespace FBC.FormControls
+@using System.ComponentModel
+@typeparam T
+
+@inherits FormControlBase<T?>
+@*@inherits FormControlBase*@
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <input type="text" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@base.Title" class="form-control" />
+        <label for="@base.Id">@base.Title</label>
+    </Content>
+</FormControlPanel>
+@code {
+
+}

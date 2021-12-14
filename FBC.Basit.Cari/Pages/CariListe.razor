@@ -1,0 +1,86 @@
+﻿@page "/cari/liste"
+@using  Microsoft.EntityFrameworkCore;
+<PageTitle>Cari Liste</PageTitle>
+
+
+<div class=row>
+
+    <div class="container px-5 my-5">
+        <div class="form-floating mb-3">
+            <input class="form-control" @bind="yeniCariIsim" id="cariIsim" type="text" placeholder="Cari İsim" data-sb-validations="" />
+            <label for="cariIsim">Cari İsim</label>
+        </div>
+
+        <div class="d-grid">
+            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
+        </div>
+    </div>
+</div>
+@if (liste == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>İsim</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in liste)
+            {
+                <tr>
+                    <td>@item.CariKartId</td>
+                    <td>@item.Isim</td>
+                    <td><a href="/cari/goster/@item.CariKartId">Aç</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CariKart>? liste;
+    private string yeniCariIsim;
+
+    private void Ekle()
+    {
+        if (!string.IsNullOrEmpty(yeniCariIsim))
+        {
+            using (var db = new DB())
+            {
+
+                db.CariKart.Add(new CariKart() { Isim = yeniCariIsim });
+                db.SaveChanges();
+
+                yeniCariIsim = null;
+                //InvokeAsync(() => RefreshList());
+            }
+            RefreshList();
+        }
+        else
+        {
+
+        }
+    }
+
+    private void RefreshList()
+    {
+
+        using (var db = new DB())
+        {
+            liste = db.CariKart.AsNoTracking().ToList();  // await ForecastService.GetForecastAsync(DateTime.Now);
+            InvokeAsync(() => StateHasChanged());
+
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        RefreshList();
+    }
+}

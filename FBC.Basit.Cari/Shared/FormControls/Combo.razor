@@ -1,0 +1,30 @@
+﻿@namespace FBC.FormControls
+@using System.Linq.Expressions
+@typeparam T
+@inherits FormControlBase<T>
+
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <select class="form-select" @bind="base.Data" id="@base.Id" aria-label="@base.Title" @oninput="OnInputChange">
+            @if (Collection?.Any() == true)
+            {
+                foreach (T item in Collection)
+                {
+                    <option value="@item">@item</option>
+                }
+            }
+        </select>
+        <label for="@base.Id">@base.Title</label>
+    </Content>
+</FormControlPanel>
+
+@code {
+    [Parameter] public IEnumerable<T> Collection { get; set; }
+
+    //public static IQueryable<TResult> Select<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<TSource, TResult>> selector)
+    //{
+    //    throw null;
+    //}
+
+
+}

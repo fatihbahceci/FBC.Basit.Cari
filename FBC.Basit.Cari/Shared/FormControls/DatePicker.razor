@@ -1,0 +1,15 @@
+﻿@namespace FBC.FormControls
+
+@inherits FormControlBase<DateTime?>
+
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <input type="date" value="@base.Data?.ToString("yyyy-MM-dd")" @oninput="OnInputChange" id="@base.Id" placeholder="@base.Title" class="form-control" />
+        <label for="@base.Id">@base.Title</label>
+    </Content>
+</FormControlPanel>
+
+@code {
+
+}
+ @*@bind:event="oninput"    @oninput="Sabri"    @bind:event="oninput" *@

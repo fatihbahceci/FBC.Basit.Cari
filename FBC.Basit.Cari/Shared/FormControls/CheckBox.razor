@@ -1,0 +1,19 @@
+﻿@namespace FBC.FormControls
+
+@inherits FormControlBase<bool>
+
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <div class="form-check">
+            @*<input class="form-check-input" value="@base.Data" type="checkbox" @oninput="OnInputChange"/>*@
+            <input class="form-check-input" @bind="base.Data" type="checkbox" @oninput="OnInputChange"/>
+            <label class="form-check-label">@base.Title</label>
+        </div>
+        @*        <input type="date" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@base.Title" class="form-control" />
+            <label for="@base.Id">@base.Title</label>*@
+    </Content>
+</FormControlPanel>
+
+@code {
+
+}

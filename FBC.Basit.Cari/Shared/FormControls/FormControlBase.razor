@@ -1,0 +1,65 @@
+﻿@namespace FBC.FormControls
+@using System.ComponentModel
+@*@using System.Diagnostics.CodeAnalysis*@
+@*@inherits Microsoft.AspNetCore.Components.Forms.InputText*@
+@typeparam T
+
+
+
+@code {
+
+    [Parameter] public RenderFragment Content { get; set; }
+    [Parameter] public string FormPanelExtraClass { get; set; }
+    [Parameter/*, AllowNull*/]
+    public T? Data { get; set; }
+    //public string Data { get; set; }
+    [Parameter]
+    public EventCallback<T> DataChanged { get; set; }
+    //public EventCallback<string> DataChanged { get; set; }
+    [Parameter] public string Name { get; set; }
+    [Parameter] public string Id { get; set; } = Guid.NewGuid().ToString();
+    [Parameter] public string Title { get; set; }
+
+    //protected override bool TryParseValueFromString (string value, out T result, out string validationErrorMessage)
+    //{
+    //    result = default(T);
+    //    validationErrorMessage = "";
+    //    return true;
+    //}
+
+    //public override async Task SetParametersAsync(ParameterView parameters)
+    //{
+    //    if (parameters.TryGetValue<T>(nameof(Data), out var value))
+    //    {
+    //        Data = value;
+    //        //DataChanged.InvokeAsync(Data);
+    //        if (value is null)
+    //        {
+    //            //message = "The value of 'Param' is null.";
+    //        }
+    //        else
+    //        {
+    //            //message = $"The value of 'Param' is {value}.";
+    //        }
+    //    }
+
+    //    await base.SetParametersAsync(parameters);
+    //}
+
+    protected async Task OnInputChange(ChangeEventArgs args)
+    {
+        var foo = TypeDescriptor.GetConverter(typeof(T));
+        try
+        {
+            Data = (T?)(foo.ConvertFromInvariantString(args.Value + ""));
+        }
+        catch
+        {
+            Data = default(T);
+        }
+        //Data = (string)args.Value;
+        await DataChanged.InvokeAsync(Data);
+    }
+
+
+}
