@@ -12,15 +12,25 @@ else
     <h1>@model.Isim</h1>
 
     <div class="container px-5 my-5">
-        <DatePicker @bind-Data="hareket.Tarih" Title="Tarih" />
+        <div class="row">
+            <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
+            <DatePicker @bind-Data="hareket.VadeTarihi" FormPanelExtraClass="col" Title="VadeTarihi" />
+        </div>
         <TextBox @bind-Data="hareket.Aciklama" Title="Aciklama" />
-        <TextBox @bind-Data="hareket.Borc" Title="Borc" />
-        <TextBox @bind-Data="hareket.Alacak" Title="Alacak" />
-        <DatePicker @bind-Data="hareket.VadeTarihi" Title="VadeTarihi" />
+        <div class="row">
+            <TextBox @bind-Data="hareket.Borc" FormPanelExtraClass="col" Title="Borc" />
+            <TextBox @bind-Data="hareket.Alacak" FormPanelExtraClass="col" Title="Alacak" />
+        </div>
 
         <div class="d-grid">
             <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
         </div>
+        @if (!string.IsNullOrEmpty(hata))
+        {
+            <div class="alert alert-danger" role="alert">
+                @hata
+            </div>
+        }
     </div>
 
 
@@ -54,6 +64,26 @@ else
                 }
             </tbody>
         </table>
+        <div class="container px-5 my-5">
+            @{
+                var toplamBorc = model.Hareketler.Sum(x => x.Borc);
+                var toplamAlacak = model.Hareketler.Sum(x => x.Alacak);
+            }
+            <table class="table">
+                <tr>
+                    <th>Toplam Borç</th>
+                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+                </tr>
+                <tr>
+                    <th>Toplam Alacak</th>
+                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+                </tr>
+                <tr>
+                    <th>Bakiye</th>
+                    <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
+                </tr>
+            </table>
+        </div>
 
     }
 }
@@ -63,12 +93,30 @@ else
 @code {
     [Parameter]
     public int Id { get; set; }
-    private CariKart model;
+    private CariKart? model;
     private CariHareket hareket = new CariHareket();
+    private string? hata;
 
     private void Ekle()
     {
-        if (hareket != null && (hareket.Borc > 0 || hareket.Alacak > 0))
+        hata = null;
+        if (hareket == null || model == null)
+        {
+            hata = $"Ri tı siya-o h:{hareket == null} m:{model == null}";
+        }
+        else if (hareket.Borc <= 0 && hareket.Alacak <= 0)
+        {
+            hata = "Borç veya alacak belirtiniz.";
+        }
+        else if (hareket.Tarih == null)
+        {
+            hata = "Tarih belirtiniz";
+        }
+        else if (hareket.VadeTarihi != null && hareket.VadeTarihi < hareket.Tarih)
+        {
+            hata = "Vade tarihi işlem tariihnden eski olamaz!";
+        }
+        else
         {
             hareket.CariKartId = model.CariKartId;
             using (var db = new DB())
@@ -81,10 +129,7 @@ else
             hareket = new CariHareket();
 
         }
-        else
-        {
 
-        }
     }
 
     private void RefreshList()
