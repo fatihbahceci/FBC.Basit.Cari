@@ -1,6 +1,8 @@
 ﻿@page "/cari/goster/{Id:int}"
 @using Microsoft.EntityFrameworkCore;
 @using System.Linq;
+@inject IJSRuntime JS
+
 @if (model == null)
 {
     <PageTitle>Cari Göster - Kayıt Bulunamadı!</PageTitle>
@@ -9,9 +11,8 @@
 else
 {
 
-    <PageTitle>Cari Göster - @model.Isim</PageTitle>
-    <h1>@model.Isim</h1>
-
+    <PageTitle>@model.Isim - Cari Göster</PageTitle>
+    <h1 id="cariekle">@model.Isim</h1>
     <div class="container px-5 my-5">
         <div class="row">
             <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
@@ -24,7 +25,11 @@ else
         </div>
 
         <div class="d-grid">
-            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
+            @if (hareket.CariHareketId > 0)
+            {
+                <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
+            }
+            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId>0 ?"Kaydet":"Ekle")</button>
         </div>
         @if (!string.IsNullOrEmpty(hata))
         {
@@ -60,7 +65,7 @@ else
                         <td>@item.Borc</td>
                         <td>@item.Alacak</td>
                         <td>@item.VadeTarihi</td>
-                        <td><a href="/cari/goster/@item.CariHareketId">Aç</a></td>
+                        <td><button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button></td>
                     </tr>
                 }
             </tbody>
@@ -89,6 +94,7 @@ else
     }
 }
 
+@*https://www.meziantou.net/anchor-navigation-in-a-blazor-application.htm*@
 
 
 @code {
@@ -98,7 +104,20 @@ else
     private CariHareket hareket = new CariHareket();
     private string? hata;
 
-    private void Ekle()
+    private void Duzenle(int id)
+    {
+        hareket = model.Hareketler.First(x => x.CariHareketId == id);
+        //https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/call-javascript-from-dotnet?view=aspnetcore-6.0
+        JS.InvokeVoidAsync("jump", "cariekle");
+    }
+
+    private void Yeni()
+    {
+        hareket = new CariHareket();
+
+    }
+
+    private void Kaydet()
     {
         hata = null;
         if (hareket == null || model == null)
@@ -119,15 +138,24 @@ else
         }
         else
         {
-            hareket.CariKartId = model.CariKartId;
-            using (var db = new DB())
+            if (hareket.CariHareketId > 0)
+            {
+            }
+            else
             {
 
-                db.CariHareket.Add(hareket);
-                db.SaveChanges();
+                hareket.CariKartId = model.CariKartId;
+                using (var db = new DB())
+                {
+
+                    db.CariHareket.Add(hareket);
+                    db.SaveChanges();
+                }
+                RefreshList();
+
             }
-            RefreshList();
-            hareket = new CariHareket();
+
+            Yeni();
 
         }
 
@@ -142,7 +170,8 @@ else
             .Where(x => x.CariKartId == Id)
             .FirstOrDefault();
 
-            if (model != null && model.Hareketler != null) {
+            if (model != null && model.Hareketler != null)
+            {
                 model.Hareketler = model.Hareketler
                 .OrderByDescending(x => x.Tarih)
                 .ThenBy(x => x.VadeTarihi)
