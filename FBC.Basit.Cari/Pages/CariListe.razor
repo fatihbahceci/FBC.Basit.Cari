@@ -125,7 +125,7 @@ else
                     Isim = x.Isim,
                     Borc = x.Hareketler.Sum(x => x.Borc),
                     Alacak = x.Hareketler.Sum(x => x.Alacak)
-                }).OrderByDescending(p => p.Bakiye).ToList();
+                }).OrderByDescending(p => p.Bakiye).ThenBy(p=> p.Isim).ToList();
             InvokeAsync(() => StateHasChanged());
 
         }

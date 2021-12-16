@@ -1,5 +1,6 @@
 ﻿@page "/cari/goster/{Id:int}"
 @using Microsoft.EntityFrameworkCore;
+@using System.Linq;
 @if (model == null)
 {
     <PageTitle>Cari Göster - Kayıt Bulunamadı!</PageTitle>
@@ -114,7 +115,7 @@ else
         }
         else if (hareket.VadeTarihi != null && hareket.VadeTarihi < hareket.Tarih)
         {
-            hata = "Vade tarihi işlem tariihnden eski olamaz!";
+            hata = "Vade tarihi işlem tarihinden eski olamaz!";
         }
         else
         {
@@ -140,6 +141,14 @@ else
             .Include(x => x.Hareketler)
             .Where(x => x.CariKartId == Id)
             .FirstOrDefault();
+
+            if (model != null && model.Hareketler != null) {
+                model.Hareketler = model.Hareketler
+                .OrderByDescending(x => x.Tarih)
+                .ThenBy(x => x.VadeTarihi)
+                .ThenByDescending(x => x.CariHareketId)
+                .ToList();
+            }
         }
         InvokeAsync(() => StateHasChanged());
 
