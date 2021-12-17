@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Microsoft.EntityFrameworkCore;
+@using FBC.Components
 <PageTitle>Cari Liste</PageTitle>
 
 
@@ -43,38 +44,53 @@ else
                 {
                     <tr>
                         <td>@item.CariKartId</td>
-                    <td>@item.Isim</td>
-                    <td>@($"₺{item.Borc:n}")</td>
-                    <td>@($"₺{item.Alacak:n}")</td>
-                    <td>@($"₺{item.Bakiye:n}")</td>
-                    <td><a href="/cari/goster/@item.CariKartId">Aç</a></td>
-                </tr>
+                        <td>@item.Isim</td>
+                        <td>@($"₺{item.Borc:n}")</td>
+                        <td>@($"₺{item.Alacak:n}")</td>
+                        <td>@($"₺{item.Bakiye:n}")</td>
+                        <td>
+                            <a href="/cari/goster/@item.CariKartId" class="btn btn-primary">Aç</a>
+                            <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariKartId)">Sil</a>
+                        </td>
+                    </tr>
                 }
             }
         </tbody>
     </table>
-   <div class="container px-5 my-5">
-            @{
-                var toplamBorc = liste.Sum(x => x.Borc);
-                var toplamAlacak = liste.Sum(x => x.Alacak);
-            }
-            <table class="table">
-                <tr>
-                    <th>Toplam Borç</th>
-                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
-                </tr>
-                <tr>
-                    <th>Toplam Alacak</th>
-                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
-                </tr>
-                <tr>
-                    <th>Bakiye</th>
-                    <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
-                </tr>
-            </table>
-        </div>
-}
+    <div class="container px-5 my-5">
+        @{
+            var toplamBorc = liste.Sum(x => x.Borc);
+            var toplamAlacak = liste.Sum(x => x.Alacak);
+        }
+        <table class="table">
+            <tr>
+                <th>Toplam Borç</th>
+                <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+            </tr>
+            <tr>
+                <th>Toplam Alacak</th>
+                <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
+            </tr>
+            <tr>
+                <th>Bakiye</th>
+                <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
+            </tr>
+        </table>
+    </div>
 
+
+    <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
+        <Body>
+            @{
+                var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
+            }
+            <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
+        </Body>
+        <Footer>
+            <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
+        </Footer>
+    </ModalForm>
+}
 @code {
 
     class CariOzet
@@ -90,6 +106,36 @@ else
     private List<CariOzet>? liste;
     private string yeniCariIsim;
     private bool bakiyesiOlmayanlariGizle;
+    ModalForm silDlg;
+    private int silinecekId = -1;
+    private int silinecekIdValidate = 0;
+
+
+    private void ShowSilDlg(int id)
+    {
+        silinecekId = id;
+        silDlg.Open();
+    }
+
+    private void Sil()
+    {
+        if (silinecekIdValidate == silinecekId)
+        {
+            using (var db = new DB())
+            {
+                var har = db.CariHareket.Where(x => x.CariKartId == silinecekId);
+                db.CariHareket.RemoveRange(har);
+                var kart = db.CariKart.Where(x => x.CariKartId == silinecekId);
+                db.CariKart.RemoveRange(kart);
+                db.SaveChanges();
+            }
+            silinecekId = -1;
+            silinecekIdValidate = 0;
+            silDlg.Close();
+            RefreshList();
+        }
+
+    }
 
     private void Ekle()
     {
@@ -125,7 +171,7 @@ else
                     Isim = x.Isim,
                     Borc = x.Hareketler.Sum(x => x.Borc),
                     Alacak = x.Hareketler.Sum(x => x.Alacak)
-                }).OrderByDescending(p => p.Bakiye).ThenBy(p=> p.Isim).ToList();
+                }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
             InvokeAsync(() => StateHasChanged());
 
         }

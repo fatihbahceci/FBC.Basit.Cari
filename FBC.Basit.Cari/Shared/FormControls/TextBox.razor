@@ -6,8 +6,8 @@
 @*@inherits FormControlBase*@
 <FormControlPanel ExtraClass="@base.FormPanelExtraClass">
     <Content>
-        <input type="text" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@base.Title" class="form-control" />
-        <label for="@base.Id">@base.Title</label>
+        <input type="text" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@((MarkupString)base.Title)" class="form-control" />
+        <label for="@base.Id">@((MarkupString)base.Title)</label>
     </Content>
 </FormControlPanel>
 @code {
