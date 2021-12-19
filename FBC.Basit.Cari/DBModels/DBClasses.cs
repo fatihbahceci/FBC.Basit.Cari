@@ -3,12 +3,39 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text;
 
 /// <summary>
 /// https://docs.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli
 /// </summary>
 namespace FBC.Basit.Cari.DBModels
 {
+    public class SysUser
+    {
+        public int SysUserId { get; set; }
+        public string SysUserName { get; set; }
+        public string SysUserPassword { get; set; }
+
+        public bool IsAdmin { get; set; }
+
+        public static string ToMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert the byte array to hexadecimal string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
+            }
+        }
+    }
     public class CariKart
     {
         public int CariKartId { get; set; }
@@ -30,12 +57,13 @@ namespace FBC.Basit.Cari.DBModels
         public int CariKartId { get; set; }
         public CariKart CariKart { get; set; }
     }
-    
+
 
     public class DB : DbContext
     {
         public DbSet<CariKart> CariKart { get; set; }
         public DbSet<CariHareket> CariHareket { get; set; }
+        public DbSet<SysUser> Users { get; set; }
 
         public string DbPath { get; }
 
@@ -55,8 +83,13 @@ namespace FBC.Basit.Cari.DBModels
                 using (var db = new DB())
                 {
                     db.Database.Migrate();
+                    if (!db.Users.Any(x => x.IsAdmin == true))
+                    {
+                        db.Users.Add(new SysUser() { SysUserName = "admin", SysUserPassword = SysUser.ToMD5("admin"), IsAdmin = true });
+                    }
                 }
-            } catch
+            }
+            catch
             {
 
             }
