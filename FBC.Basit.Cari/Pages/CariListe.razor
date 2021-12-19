@@ -23,9 +23,13 @@
 }
 else
 {
+    var toplamBorc = liste.Sum(x => x.Borc);
+    var toplamAlacak = liste.Sum(x => x.Alacak);
     <div class="row">
         <CheckBox @bind-Data="bakiyesiOlmayanlariGizle" Title="Bakiyesi olmayanları gizle" />
     </div>
+    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+
     <table class="table">
         <thead>
             <tr>
@@ -57,26 +61,9 @@ else
             }
         </tbody>
     </table>
-    <div class="container px-5 my-5">
-        @{
-            var toplamBorc = liste.Sum(x => x.Borc);
-            var toplamAlacak = liste.Sum(x => x.Alacak);
-        }
-        <table class="table">
-            <tr>
-                <th>Toplam Borç</th>
-                <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
-            </tr>
-            <tr>
-                <th>Toplam Alacak</th>
-                <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
-            </tr>
-            <tr>
-                <th>Bakiye</th>
-                <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
-            </tr>
-        </table>
-    </div>
+    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+
+
 
 
     <ModalForm @ref="silDlg" Title="Silme işlemini onayla">

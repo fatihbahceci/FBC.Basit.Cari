@@ -1,0 +1,30 @@
+﻿@namespace FBC.Components
+ <div class="container px-5 my-5">
+            <table class="table">
+                <tr>
+                    <th>Toplam Borç</th>
+                    <td style="text-align: right">@($"₺{ToplamBorc:n}")</td>
+                </tr>
+                <tr>
+                    <th>Toplam Alacak</th>
+                    <td style="text-align: right">@($"₺{ToplamAlacak:n}")</td>
+                </tr>
+                <tr>
+                    <th>Bakiye</th>
+                    <td style="text-align: right">@($"₺{(ToplamAlacak - ToplamBorc):n}")</td>
+                </tr>
+            </table>
+        </div>
+
+
+@code {
+    [Parameter]
+    public decimal ToplamBorc { get; set; }
+    [Parameter]
+    public EventCallback<decimal> ToplamBorcChanged { get; set; }
+    [Parameter]
+    public decimal ToplamAlacak { get; set; }
+    [Parameter]
+    public EventCallback<decimal> ToplamAlacakChanged { get; set; }
+
+}

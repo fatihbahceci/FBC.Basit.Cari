@@ -11,6 +11,8 @@
 }
 else
 {
+    var toplamBorc = model.Hareketler.Sum(x => x.Borc);
+    var toplamAlacak = model.Hareketler.Sum(x => x.Alacak);
 
     <PageTitle>@model.Isim - Cari Göster</PageTitle>
     <h1 id="cariekle">@model.Isim</h1>
@@ -40,6 +42,7 @@ else
         }
     </div>
 
+    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
 
     @if (model.Hareketler != null)
@@ -75,26 +78,8 @@ else
                 }
             </tbody>
         </table>
-        <div class="container px-5 my-5">
-            @{
-                var toplamBorc = model.Hareketler.Sum(x => x.Borc);
-                var toplamAlacak = model.Hareketler.Sum(x => x.Alacak);
-            }
-            <table class="table">
-                <tr>
-                    <th>Toplam Borç</th>
-                    <td style="text-align: right">@($"₺{toplamBorc:n}")</td>
-                </tr>
-                <tr>
-                    <th>Toplam Alacak</th>
-                    <td style="text-align: right">@($"₺{toplamAlacak:n}")</td>
-                </tr>
-                <tr>
-                    <th>Bakiye</th>
-                    <td style="text-align: right">@($"₺{(toplamAlacak - toplamBorc):n}")</td>
-                </tr>
-            </table>
-        </div>
+        <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+
 
         <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
             <Body>
