@@ -170,6 +170,20 @@ else
         {
             if (hareket.CariHareketId > 0)
             {
+
+                hareket.CariKartId = model.CariKartId;
+                using (var db = new DB())
+                {
+                    var exists = db.CariHareket.FirstOrDefault(x => x.CariHareketId == hareket.CariHareketId);
+                    if (exists != null)
+                    {
+                        exists.Fill(hareket);
+                        db.SaveChanges();
+                    } else
+                    {
+                        hata = "Kayıt bulunamadı! Başka bir ekranda veya kullanıcı tarafından silinmiş olabilir...";
+                    }
+                }
             }
             else
             {
@@ -181,10 +195,9 @@ else
                     db.CariHareket.Add(hareket);
                     db.SaveChanges();
                 }
-                RefreshList();
 
             }
-
+            RefreshList();
             Yeni();
 
         }

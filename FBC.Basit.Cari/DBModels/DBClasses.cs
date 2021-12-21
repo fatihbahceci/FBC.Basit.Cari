@@ -56,6 +56,19 @@ namespace FBC.Basit.Cari.DBModels
 
         public int CariKartId { get; set; }
         public CariKart CariKart { get; set; }
+
+
+        public void Fill(CariHareket h)
+        {
+            //public int CariHareketId { get; set; }
+            //public int CariKartId { get; set; }
+            Tarih = h.Tarih;
+            Aciklama = h.Aciklama;
+            EvrakNo = h.EvrakNo;
+            Borc = h.Borc;
+            Alacak = h.Alacak;
+            VadeTarihi = h.VadeTarihi;
+        }
     }
 
 
