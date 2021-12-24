@@ -97,6 +97,7 @@ namespace FBC.Basit.Cari.Auth
         private const long IDLE_TIME_LIMIT_SECONDS = 60;
         private HttpContext? context;
         private SessionAIUser aiData;
+        private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
 
         static UserSessionManager()
         {
@@ -165,7 +166,7 @@ namespace FBC.Basit.Cari.Auth
                     }
                 }
             }
-            throw new Exception("Terbiyesizliğin lüzumu yok!");
+            throw new Exception(COOKIE_ERROR);
         }
 
         public void Logout()
@@ -177,7 +178,7 @@ namespace FBC.Basit.Cari.Auth
             }
             else
             {
-                throw new Exception("Terbiyesizliğin lüzumu yok!");
+                throw new Exception(COOKIE_ERROR);
 
             }
 
@@ -211,7 +212,7 @@ namespace FBC.Basit.Cari.Auth
             if (lUser != null)
             {
                 List<Claim> claims = new List<Claim>();
-
+                claims.Add(new Claim(ClaimTypes.Sid, lUser.SysUserName));
                 claims.Add(new Claim(ClaimTypes.Name, lUser.Name));
                 claims.Add(new Claim(ClaimTypes.Surname, lUser.Surname));
                 if (lUser.IsAdmin)

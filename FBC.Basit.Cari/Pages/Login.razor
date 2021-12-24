@@ -8,11 +8,13 @@
 
     <div class="container px-5 my-5">
         <TextBox @bind-Data="userName" Title="Kullanıcı Adı" />
-        <TextBox @bind-Data="password" Title="Kullanıcı Adı" IsPassword="true" />
-
-        <div class="d-grid">
-            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="TryLogin">Giriş</button>
-        </div>
+        <TextBox @bind-Data="password" Title="Parola" IsPassword="true" />
+        @if (!trying)
+        {
+            <div class="d-grid">
+                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="TryLogin">Giriş</button>
+            </div>
+        }
     </div>
     @if (!string.IsNullOrEmpty(loginMessage))
     {
@@ -27,6 +29,7 @@
     string userName;
     string password;
     string loginMessage;
+    bool trying = false;
 
 
     void TryLogin()
@@ -34,6 +37,8 @@
 
         try
         {
+            trying = true;
+            InvokeAsync(() => StateHasChanged());
             if (mgr.Login(userName, password))
             {
                 Navi.NavigateTo("/", true);
@@ -47,6 +52,12 @@
         catch (Exception exc)
         {
             loginMessage = "Hata: " + exc.Message;
+        }
+        finally
+        {
+            trying = false;
+            InvokeAsync(() => StateHasChanged());
+
         }
     }
 
