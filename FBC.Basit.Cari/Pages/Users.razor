@@ -1,0 +1,264 @@
+﻿@page "/Users"
+@attribute [Authorize(Roles = "Admin")]
+
+@using Microsoft.EntityFrameworkCore;
+@using System.Linq;
+@using FBC.Components;
+
+@inject IJSRuntime JS
+
+<PageTitle>Users</PageTitle>
+<h1 id="kullaniciekle">Users</h1>
+<div class="container px-5 my-5">
+    <div class="row">
+        <TextBox @bind-Data="user.SysUserName" FormPanelExtraClass="col" Title="Kullanıcı Adı" />
+        <TextBox @bind-Data="newPassword" FormPanelExtraClass="col" Title="@(user.SysUserId>0 ?"Yeni Parola (Boş:Aynı)":"Parola")" IsPassword="true" />
+    </div>
+    <div class="row">
+        <TextBox @bind-Data="user.Name" FormPanelExtraClass="col" Title="İsim" />
+        <TextBox @bind-Data="user.Surname" FormPanelExtraClass="col" Title="Soyisim" />
+    </div>
+    <CheckBox @bind-Data="user.IsAdmin" Title="Admin" />
+
+
+    <div class="d-grid">
+        @if (user.SysUserId > 0)
+        {
+            <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
+        }
+        <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(user.SysUserId>0 ?"Kaydet":"Ekle")</button>
+    </div>
+    @if (!string.IsNullOrEmpty(hata))
+    {
+        <div class="alert alert-danger" role="alert">
+            @hata
+        </div>
+    }
+</div>
+
+@if (users != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>SysUserId</th>
+                <th>SysUserName</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>IsAdmin</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in users)
+            {
+                <tr>
+                    <td>@item.SysUserId</td>
+                    <td>@item.SysUserName</td>
+                    <td>@item.Name</td>
+                    <td>@item.Surname</td>
+                    <td>@item.IsAdmin</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
+                        <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)">Sil</a>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
+        <Body>
+            @{
+                var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
+            }
+            <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
+        </Body>
+        <Footer>
+            <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
+        </Footer>
+    </ModalForm>
+}
+
+
+@*https://www.meziantou.net/anchor-navigation-in-a-blazor-application.htm*@
+
+
+@code {
+    private List<SysUser> users;
+    private SysUser user = new SysUser();
+    private string newPassword = "";
+
+
+    private string? hata;
+    ModalForm silDlg;
+    private int silinecekId = -1;
+    private int silinecekIdValidate = 0;
+
+    private void ShowSilDlg(int id)
+    {
+        silinecekId = id;
+        silDlg.Open();
+    }
+
+    private void Sil()
+    {
+        if (silinecekIdValidate == silinecekId)
+        {
+            using (var db = new DB())
+            {
+                var totalAdminCount = db.Users.Where(x => x.IsAdmin == true).Count();
+                var exists = db.Users.FirstOrDefault(x => x.SysUserId == user.SysUserId);
+                if (exists != null)
+                {
+                    if (exists.IsAdmin && totalAdminCount <= 1)
+                    {
+                        hata = "Bu kullanıcı silinirse geriye admin kalmıyor!";
+                    }
+                    else
+                    {
+                        db.Users.Remove(exists);
+                        db.SaveChanges();
+                    }
+                }
+            }
+            silinecekId = -1;
+            silinecekIdValidate = 0;
+            silDlg.Close();
+            RefreshList();
+        }
+
+    }
+
+
+    private void Duzenle(int id)
+    {
+        using (var db = new DB())
+        {
+            user = db.Users.AsNoTracking().Where(x => x.SysUserId == id).FirstOrDefault() ?? new SysUser();
+            newPassword = "";
+        }
+        //https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/call-javascript-from-dotnet?view=aspnetcore-6.0
+        JS.InvokeVoidAsync("jump", "kullaniciekle");
+    }
+
+    private void Yeni()
+    {
+        user = new SysUser();
+        newPassword = "";
+
+    }
+
+    private void Kaydet()
+    {
+        hata = null;
+        if (user == null)
+        {
+            hata = "Ri tı siya-o";
+        }
+        else if (string.IsNullOrEmpty(user.SysUserName))
+        {
+            hata = "Kullanıcı Adı boş olamaz!";
+        }
+        else if (string.IsNullOrEmpty(user.Name))
+        {
+            hata = "İsim boş olamaz!";
+        }
+        else if (string.IsNullOrEmpty(user.Surname))
+        {
+            hata = "Soyad boş olamaz!";
+        }
+        else
+        {
+            //Edit
+            if (user.SysUserId > 0)
+            {
+
+
+                using (var db = new DB())
+                {
+                    var anotherIdExists = db.Users.Where(x => x.SysUserId != user.SysUserId && x.SysUserName == user.SysUserName).Any();
+                    if (anotherIdExists)
+                    {
+                        hata = "Bu kullanıcı adı zaten var!";
+
+                    }
+                    else
+                    {
+                        var totalAdminCount = db.Users.Where(x => x.IsAdmin == true).Count();
+                        var exists = db.Users.FirstOrDefault(x => x.SysUserId == user.SysUserId);
+                        if (exists != null)
+                        {
+                            if (exists.IsAdmin && user.IsAdmin == false && totalAdminCount <= 1)
+                            {
+                                hata = "Bu kullanıcı admin olmaktan çıkarılırsa geriye admin kalmıyor!";
+                            }
+                            else
+                            {
+                                exists.Name = user.Name;
+                                exists.Surname = user.Surname;
+                                exists.SysUserName = user.SysUserName;
+                                exists.IsAdmin = user.IsAdmin;
+                                if (!string.IsNullOrEmpty(newPassword))
+                                {
+                                    exists.SysUserPassword = SysUser.ToMD5(newPassword);
+
+                                }
+                                db.SaveChanges();
+                            }
+                        }
+                        else
+                        {
+                            hata = "Kayıt bulunamadı! Başka bir ekranda veya kullanıcı tarafından silinmiş olabilir...";
+                        }
+                    }
+                }
+            }
+            else //Add
+            {
+                if (string.IsNullOrEmpty(newPassword))
+                {
+                    hata = "Parola boş olamaz!";
+                }
+                else
+                {
+                    using (var db = new DB())
+                    {
+                        var anotherIdExists = db.Users.Where(x => x.SysUserName == user.SysUserName).Any();
+                        if (anotherIdExists)
+                        {
+                            hata = "Bu kullanıcı adı zaten var!";
+                        }
+                        else
+                        {
+                            user.SysUserPassword = SysUser.ToMD5(newPassword);
+                            db.Users.Add(user);
+                            db.SaveChanges();
+                        }
+                    }
+                }
+            }
+            RefreshList();
+            Yeni();
+        }
+
+    }
+
+    private void RefreshList()
+    {
+        using (var db = new DB())
+        {
+            users = db.Users.AsNoTracking().ToList();
+
+        }
+        InvokeAsync(() => StateHasChanged());
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        RefreshList();
+    }
+}
