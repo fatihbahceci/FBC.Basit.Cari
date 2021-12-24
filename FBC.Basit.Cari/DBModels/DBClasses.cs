@@ -87,7 +87,12 @@ namespace FBC.Basit.Cari.DBModels
             //var path = Environment.GetFolderPath(folder);
             //DbPath = Path.Join(path, "basitcari.db");
             //DbPath = ":memory:";
-            DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "basitcari.db");
+            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database");
+            DbPath = Path.Combine(dir, "basitcari.db");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
         }
         static DB()
         {
