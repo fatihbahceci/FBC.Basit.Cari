@@ -14,12 +14,18 @@ namespace FBC.Basit.Cari.DBModels
     {
         public int SysUserId { get; set; }
         public string SysUserName { get; set; }
+        public string Name { get; set; }
+        public string Surname { get; set; }
         public string SysUserPassword { get; set; }
 
         public bool IsAdmin { get; set; }
 
         public static string ToMD5(string input)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                return string.Empty;
+            }
             // Use input string to calculate MD5 hash
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
             {
@@ -103,13 +109,23 @@ namespace FBC.Basit.Cari.DBModels
                     db.Database.Migrate();
                     if (!db.Users.Any(x => x.IsAdmin == true))
                     {
-                        db.Users.Add(new SysUser() { SysUserName = "admin", SysUserPassword = SysUser.ToMD5("admin"), IsAdmin = true });
+                        db.Users.Add(new SysUser()
+                        {
+                            SysUserName = "admin",
+                            SysUserPassword = SysUser.ToMD5("admin"),
+                            IsAdmin = true,
+                            Name = "System",
+                            Surname = "Admin"
+
+                        });
+                        db.SaveChanges();
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 

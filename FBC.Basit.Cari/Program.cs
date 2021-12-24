@@ -1,17 +1,16 @@
 //using FBC.Basit.Cari.Data;
-using FBC.Basit.Cari.Auth;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
+using FBC.Basit.Cari.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
-
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UserSessionManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 var app = builder.Build();
 

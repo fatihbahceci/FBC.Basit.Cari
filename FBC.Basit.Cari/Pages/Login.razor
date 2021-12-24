@@ -1,5 +1,53 @@
 ﻿@using FBC.Basit.Cari.Auth
+@attribute [AllowAnonymous]
+@inject UserSessionManager mgr
+@inject NavigationManager Navi
 
 @page "/Login"
-@attribute [AllowAnonymous]
-@*https://docs.microsoft.com/en-us/aspnet/core/blazor/security/?view=aspnetcore-6.0#implement-a-custom-authenticationstateprovider*@
+<div class=row>
+
+    <div class="container px-5 my-5">
+        <TextBox @bind-Data="userName" Title="Kullanıcı Adı" />
+        <TextBox @bind-Data="password" Title="Kullanıcı Adı" IsPassword="true" />
+
+        <div class="d-grid">
+            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="TryLogin">Giriş</button>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(loginMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @loginMessage
+        </div>
+    }
+</div>
+
+@code {
+
+    string userName;
+    string password;
+    string loginMessage;
+
+
+    void TryLogin()
+    {
+
+        try
+        {
+            if (mgr.Login(userName, password))
+            {
+                Navi.NavigateTo("/", true);
+
+            }
+            else
+            {
+                loginMessage = "Geçersiz kullanıcı adı veya parola";
+            }
+        }
+        catch (Exception exc)
+        {
+            loginMessage = "Hata: " + exc.Message;
+        }
+    }
+
+}

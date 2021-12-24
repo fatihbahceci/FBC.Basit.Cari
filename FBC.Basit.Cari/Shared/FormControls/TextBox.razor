@@ -6,10 +6,11 @@
 @*@inherits FormControlBase*@
 <FormControlPanel ExtraClass="@base.FormPanelExtraClass">
     <Content>
-        <input type="text" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@((MarkupString)base.Title)" class="form-control" />
+        <input type="@(IsPassword? "password" : "text")" value="@base.Data" @oninput="OnInputChange" id="@base.Id" placeholder="@((MarkupString)base.Title)" class="form-control" />
         <label for="@base.Id">@((MarkupString)base.Title)</label>
     </Content>
 </FormControlPanel>
 @code {
-
+    [Parameter]
+    public bool IsPassword { get; set; } = false;
 }

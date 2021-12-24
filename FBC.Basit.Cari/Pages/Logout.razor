@@ -1,6 +1,14 @@
-﻿@page "/Logout"
+﻿@using FBC.Basit.Cari.Auth
 @attribute [AllowAnonymous]
+@inject UserSessionManager mgr
+@inject NavigationManager Navi
+
+@page "/Logout"
 
 @code {
-
+    protected override async Task OnInitializedAsync()
+    {
+        mgr.Logout();
+        Navi.NavigateTo("/", true);
+    }
 }
