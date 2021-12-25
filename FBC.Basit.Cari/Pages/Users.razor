@@ -19,6 +19,7 @@
         <TextBox @bind-Data="user.Surname" FormPanelExtraClass="col" Title="Soyisim" />
     </div>
     <CheckBox @bind-Data="user.IsAdmin" Title="Admin" />
+    <CheckBox @bind-Data="user.IsCanEditData" Title="Cari işlemleri değiştirebilir" />
 
 
     <div class="d-grid">
@@ -46,6 +47,7 @@
                 <th>Name</th>
                 <th>Surname</th>
                 <th>IsAdmin</th>
+                <th>IsCanEditData</th>
                 <th>İşlemler</th>
             </tr>
         </thead>
@@ -58,6 +60,7 @@
                     <td>@item.Name</td>
                     <td>@item.Surname</td>
                     <td>@item.IsAdmin</td>
+                    <td>@item.IsCanEditData</td>
                     <td>
                         <button class="btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
                         <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)">Sil</a>
@@ -197,14 +200,10 @@
                             }
                             else
                             {
-                                exists.Name = user.Name;
-                                exists.Surname = user.Surname;
-                                exists.SysUserName = user.SysUserName;
-                                exists.IsAdmin = user.IsAdmin;
+                                exists.Fill(user);
                                 if (!string.IsNullOrEmpty(newPassword))
                                 {
-                                    exists.SysUserPassword = SysUser.ToMD5(newPassword);
-
+                                    exists.SetNewPassword(newPassword);
                                 }
                                 db.SaveChanges();
                             }
@@ -233,7 +232,7 @@
                         }
                         else
                         {
-                            user.SysUserPassword = SysUser.ToMD5(newPassword);
+                            user.SetNewPassword(newPassword);
                             db.Users.Add(user);
                             db.SaveChanges();
                         }

@@ -19,6 +19,27 @@ namespace FBC.Basit.Cari.DBModels
         public string SysUserPassword { get; set; }
 
         public bool IsAdmin { get; set; }
+        public bool IsCanEditData { get; set; }
+        public int? CariKartId { get; set; }
+
+        /// <summary>
+        /// SysUserPassword'a dokunmaz. Onu ayrıca set etmeniz gerekir. 
+        /// </summary>
+        /// <param name="user"></param>
+        public void Fill(SysUser user)
+        {
+            this.Name = user.Name;
+            this.Surname = user.Surname;
+            this.SysUserName = user.SysUserName;
+            this.IsAdmin = user.IsAdmin;
+            this.IsCanEditData = user.IsCanEditData;
+            this.CariKartId = user.CariKartId;
+        }
+
+        public void SetNewPassword(string newPassword)
+        {
+            SysUserPassword = SysUser.ToMD5(newPassword);
+        }
 
         public static string ToMD5(string input)
         {
@@ -42,6 +63,8 @@ namespace FBC.Basit.Cari.DBModels
             }
         }
     }
+
+
     public class CariKart
     {
         public int CariKartId { get; set; }
@@ -115,8 +138,8 @@ namespace FBC.Basit.Cari.DBModels
                             SysUserPassword = SysUser.ToMD5("admin"),
                             IsAdmin = true,
                             Name = "System",
-                            Surname = "Admin"
-
+                            Surname = "Admin",
+                            IsCanEditData = false
                         });
                         db.SaveChanges();
                     }

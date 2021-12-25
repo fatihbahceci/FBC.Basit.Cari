@@ -3,20 +3,19 @@
 @using FBC.Components
 <PageTitle>Cari Liste</PageTitle>
 
-
-<div class=row>
-
-    <div class="container px-5 my-5">
-        <div class="form-floating mb-3">
-            <input class="form-control" @bind="yeniCariIsim" id="cariIsim" type="text" placeholder="Cari İsim" data-sb-validations="" />
-            <label for="cariIsim">Cari İsim</label>
-        </div>
-
-        <div class="d-grid">
-            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
+<AuthorizeView Roles="CanEditData">
+    <div class=row>
+        <div class="container px-5 my-5">
+            <div class="form-floating mb-3">
+                <input class="form-control" @bind="yeniCariIsim" id="cariIsim" type="text" placeholder="Cari İsim" data-sb-validations="" />
+                <label for="cariIsim">Cari İsim</label>
+            </div>
+            <div class="d-grid">
+                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
+            </div>
         </div>
     </div>
-</div>
+</AuthorizeView>
 @if (liste == null)
 {
     <p><em>Loading...</em></p>
@@ -54,7 +53,9 @@ else
                         <td>@($"₺{item.Bakiye:n}")</td>
                         <td>
                             <a href="/cari/goster/@item.CariKartId" class="btn btn-primary">Aç</a>
-                            <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariKartId)">Sil</a>
+                            <AuthorizeView Roles="CanEditData">
+                                <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariKartId)">Sil</a>
+                            </AuthorizeView>
                         </td>
                     </tr>
                 }
@@ -65,18 +66,19 @@ else
 
 
 
-
-    <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
-        <Body>
-            @{
-                var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-            }
-            <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
-        </Body>
-        <Footer>
-            <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-        </Footer>
-    </ModalForm>
+    <AuthorizeView Roles="CanEditData">
+        <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
+            <Body>
+                @{
+                    var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
+                }
+                <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
+            </Body>
+            <Footer>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
+            </Footer>
+        </ModalForm>
+    </AuthorizeView>
 }
 @code {
 

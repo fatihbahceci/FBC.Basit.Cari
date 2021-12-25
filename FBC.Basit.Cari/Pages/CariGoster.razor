@@ -18,32 +18,33 @@ else
 
     <PageTitle>@model.Isim - Cari Göster</PageTitle>
     <h1 id="cariekle">@model.Isim</h1>
-    <div class="container px-5 my-5">
-        <div class="row">
-            <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
-            <DatePicker @bind-Data="hareket.VadeTarihi" FormPanelExtraClass="col" Title="VadeTarihi" />
-        </div>
-        <TextBox @bind-Data="hareket.Aciklama" Title="Aciklama" />
-        <div class="row">
-            <TextBox @bind-Data="hareket.Borc" FormPanelExtraClass="col" Title="Borc" />
-            <TextBox @bind-Data="hareket.Alacak" FormPanelExtraClass="col" Title="Alacak" />
-        </div>
-
-        <div class="d-grid">
-            @if (hareket.CariHareketId > 0)
-            {
-                <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
-            }
-            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId>0 ?"Kaydet":"Ekle")</button>
-        </div>
-        @if (!string.IsNullOrEmpty(hata))
-        {
-            <div class="alert alert-danger" role="alert">
-                @hata
+    <AuthorizeView Roles="CanEditData">
+        <div class="container px-5 my-5">
+            <div class="row">
+                <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
+                <DatePicker @bind-Data="hareket.VadeTarihi" FormPanelExtraClass="col" Title="VadeTarihi" />
             </div>
-        }
-    </div>
+            <TextBox @bind-Data="hareket.Aciklama" Title="Aciklama" />
+            <div class="row">
+                <TextBox @bind-Data="hareket.Borc" FormPanelExtraClass="col" Title="Borc" />
+                <TextBox @bind-Data="hareket.Alacak" FormPanelExtraClass="col" Title="Alacak" />
+            </div>
 
+            <div class="d-grid">
+                @if (hareket.CariHareketId > 0)
+                {
+                    <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
+                }
+                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId>0 ?"Kaydet":"Ekle")</button>
+            </div>
+            @if (!string.IsNullOrEmpty(hata))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @hata
+                </div>
+            }
+        </div>
+    </AuthorizeView>
     <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
 
@@ -58,7 +59,9 @@ else
                     <th>Borc</th>
                     <th>Alacak</th>
                     <th>VadeTarihi</th>
-                    <th>İşlemler</th>
+                    <AuthorizeView Roles="CanEditData">
+                        <th>İşlemler</th>
+                    </AuthorizeView>
                 </tr>
             </thead>
             <tbody>
@@ -71,29 +74,33 @@ else
                         <td>@item.Borc</td>
                         <td>@item.Alacak</td>
                         <td>@item.VadeTarihi</td>
-                        <td>
-                            <button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button>
-                            <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariHareketId)">Sil</a>
+                        <AuthorizeView Roles="CanEditData">
+                            <td>
+                                <button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button>
+                                <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariHareketId)">Sil</a>
 
-                        </td>
+                            </td>
+                        </AuthorizeView>
                     </tr>
                 }
             </tbody>
         </table>
         <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
+        <AuthorizeView Roles="CanEditData">
+            <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
+                <Body>
+                    @{
+                        var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
+                    }
+                    <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
+                </Body>
+                <Footer>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
+                </Footer>
+            </ModalForm>
+        </AuthorizeView>
 
-        <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
-            <Body>
-                @{
-                    var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-                }
-                <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
-            </Body>
-            <Footer>
-                <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-            </Footer>
-        </ModalForm>
     }
 }
 

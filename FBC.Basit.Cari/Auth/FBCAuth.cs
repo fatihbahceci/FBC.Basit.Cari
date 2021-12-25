@@ -246,6 +246,10 @@ namespace FBC.Basit.Cari.Auth
                     claims.Add(new Claim(ClaimTypes.Role, "Admin"));
 
                 }
+                if (lUser.IsCanEditData)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "CanEditData"));
+                }
                 var identity = new ClaimsIdentity(claims, "Database uleyn");
                 var user = new ClaimsPrincipal(identity);
 
