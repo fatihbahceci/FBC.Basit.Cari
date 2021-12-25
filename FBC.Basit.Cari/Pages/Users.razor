@@ -109,7 +109,7 @@
             using (var db = new DB())
             {
                 var totalAdminCount = db.Users.Where(x => x.IsAdmin == true).Count();
-                var exists = db.Users.FirstOrDefault(x => x.SysUserId == user.SysUserId);
+                var exists = db.Users.FirstOrDefault(x => x.SysUserId == silinecekId);
                 if (exists != null)
                 {
                     if (exists.IsAdmin && totalAdminCount <= 1)
@@ -120,13 +120,14 @@
                     {
                         db.Users.Remove(exists);
                         db.SaveChanges();
+                        silinecekId = -1;
+                        silinecekIdValidate = 0;
+                        silDlg.Close();
+                        RefreshList();
                     }
                 }
             }
-            silinecekId = -1;
-            silinecekIdValidate = 0;
-            silDlg.Close();
-            RefreshList();
+
         }
 
     }
