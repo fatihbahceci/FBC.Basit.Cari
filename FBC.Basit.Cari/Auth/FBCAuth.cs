@@ -94,7 +94,7 @@ namespace FBC.Basit.Cari.Auth
     {
         private static ConcurrentDictionary<string, UserDataHolder> _users;
         private static DateTime lastPerodicalIdleChecked = DateTime.Now;
-        private const long IDLE_TIME_LIMIT_SECONDS = 60;
+        private const long IDLE_TIME_LIMIT_SECONDS = 60 * 5;
         private HttpContext? context;
         private SessionAIUser aiData;
         private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
