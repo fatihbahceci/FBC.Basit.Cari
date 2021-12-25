@@ -28,36 +28,62 @@ namespace FBC.Basit.Cari.Auth
     class SessionAIUser
     {
         public string? UserId { get; }
-        public string? UserCreatedDate { get; }
-        public string? SessionId { get; }
-        public string? SessionCreatedDate { get; }
-        public string? SessionUpdatedDate { get; }
+        //public string? UserCreatedDate { get; }
+        //public string? SessionId { get; }
+        //public string? SessionCreatedDate { get; }
+        //public string? SessionUpdatedDate { get; }
 
         public SessionAIUser(HttpContext? context)
         {
             if (context != null && context.Request != null && context.Request.Cookies != null && context.Request.Cookies.Any())
             {
                 var c = context.Request.Cookies;
-                if (c.TryGetValue("ai_user", out string? user))
+                if (c.TryGetValue("fbc-bw-id", out string? fbcid))
                 {
-                    if (!string.IsNullOrEmpty(user))
+                    if (!string.IsNullOrEmpty(fbcid))
                     {
-                        var ur = user.Split("|");
-                        this.UserId = ur[0];
-                        this.UserCreatedDate = ur[1];
+
+                        this.UserId = fbcid;
+
+                        //add ip addr too when only cookie is working
+                        try
+                        {
+                            String ip = context.Connection.RemoteIpAddress.ToString();
+                            if (!string.IsNullOrEmpty(ip))
+                            {
+                                this.UserId += ip;
+                            }
+                            //Console.WriteLine("ip:" + ip);
+                        }
+                        catch
+                        {
+
+                        }
+
                     }
                 }
 
-                if (c.TryGetValue("ai_session", out string? session))
-                {
-                    if (!string.IsNullOrEmpty(session))
-                    {
-                        var ur = session.Split("|");
-                        this.SessionId = ur[0];
-                        this.SessionCreatedDate = ur[1];
-                        this.SessionUpdatedDate = ur[2];
-                    }
-                }
+
+                //if (c.TryGetValue("ai_user", out string? user))
+                //{
+                //    if (!string.IsNullOrEmpty(user))
+                //    {
+                //        var ur = user.Split("|");
+                //        this.UserId = ur[0];
+                //        this.UserCreatedDate = ur[1];
+                //    }
+                //}
+
+                //if (c.TryGetValue("ai_session", out string? session))
+                //{
+                //    if (!string.IsNullOrEmpty(session))
+                //    {
+                //        var ur = session.Split("|");
+                //        this.SessionId = ur[0];
+                //        this.SessionCreatedDate = ur[1];
+                //        this.SessionUpdatedDate = ur[2];
+                //    }
+                //}
                 /*
 
                             Browser 1:
