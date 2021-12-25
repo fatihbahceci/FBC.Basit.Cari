@@ -3,16 +3,23 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using FBC.Basit.Cari.Auth;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//builder.Services.AddCookiePolicy
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<UserSessionManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 var app = builder.Build();
+
+//app.UseForwardedHeaders(new ForwardedHeadersOptions
+//{
+//    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+//});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
