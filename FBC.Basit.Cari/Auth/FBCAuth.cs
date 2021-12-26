@@ -63,53 +63,6 @@ namespace FBC.Basit.Cari.Auth
                     }
                 }
 
-
-                //if (c.TryGetValue("ai_user", out string? user))
-                //{
-                //    if (!string.IsNullOrEmpty(user))
-                //    {
-                //        var ur = user.Split("|");
-                //        this.UserId = ur[0];
-                //        this.UserCreatedDate = ur[1];
-                //    }
-                //}
-
-                //if (c.TryGetValue("ai_session", out string? session))
-                //{
-                //    if (!string.IsNullOrEmpty(session))
-                //    {
-                //        var ur = session.Split("|");
-                //        this.SessionId = ur[0];
-                //        this.SessionCreatedDate = ur[1];
-                //        this.SessionUpdatedDate = ur[2];
-                //    }
-                //}
-                /*
-
-                            Browser 1:
-                               context.Request.Cookies-ai_user: pQnR0|2021-11-13T19:53:47.993Z
-                               context.Request.Cookies-ai_session: KkJTu|1640361317311|1640363078131.7
-
-
-                               context.Request.Cookies-ai_user: pQnR0|2021-11-13T19:53:47.993Z
-                               context.Request.Cookies-ai_session: KkJTu|1640361317311|1640363487113.1
-
-
-                               context.Request.Cookies-ai_user: pQnR0|2021-11-13T19:53:47.993Z
-                               context.Request.Cookies-ai_session: KkJTu|1640361317311|1640363551106.6
-
-
-                            Browser 2
-                               context.Request.Cookies-ai_user: d3+nd|2021-12-24T16:26:50.903Z
-                               context.Request.Cookies-ai_session: eNdod|1640363210911|1640363296116.7
-
-                               context.Request.Cookies-ai_user: d3+nd|2021-12-24T16:26:50.903Z
-                               context.Request.Cookies-ai_session: eNdod|1640363210911|1640363327643.7
-
-                               context.Request.Cookies-ai_user: d3+nd|2021-12-24T16:26:50.903Z
-                               context.Request.Cookies-ai_session: eNdod|1640363210911|1640363365322.7
-
-                            */
             }
         }
 
@@ -249,6 +202,11 @@ namespace FBC.Basit.Cari.Auth
                 if (lUser.IsCanEditData)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "CanEditData"));
+                }
+                if (lUser.CariKartId != null)
+                {
+                    claims.Add(new Claim("CariKartId", "" + lUser.CariKartId));
+
                 }
                 var identity = new ClaimsIdentity(claims, "Database uleyn");
                 var user = new ClaimsPrincipal(identity);
