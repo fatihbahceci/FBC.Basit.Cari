@@ -20,6 +20,11 @@
     </div>
     <CheckBox @bind-Data="user.IsAdmin" Title="Admin" />
     <CheckBox @bind-Data="user.IsCanEditData" Title="Cari işlemleri değiştirebilir" />
+    <div class="input-group mb-3">
+        <input readonly type="text" @bind="seciliCariIsim" class="form-control" placeholder="Cari hesap seç" aria-label="Cari hesap seç" aria-describedby="button-addon2">
+        <button @onclick="CariSecGoster" class="btn btn-outline-secondary" type="button" id="button-addon2">Cari Seç</button>
+    </div>
+
 
 
     <div class="d-grid">
@@ -48,6 +53,7 @@
                 <th>Surname</th>
                 <th>IsAdmin</th>
                 <th>IsCanEditData</th>
+                <th>CariKartId</th>
                 <th>İşlemler</th>
             </tr>
         </thead>
@@ -61,6 +67,7 @@
                     <td>@item.Surname</td>
                     <td>@item.IsAdmin</td>
                     <td>@item.IsCanEditData</td>
+                    <td>@item.CariKartId</td>
                     <td>
                         <button class="btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
                         <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)">Sil</a>
@@ -77,6 +84,52 @@
                 var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
             }
             <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
+            @if (!string.IsNullOrEmpty(hata))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @hata
+                </div>
+            }
+        </Body>
+        <Footer>
+            <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
+        </Footer>
+    </ModalForm>
+
+
+    <ModalForm @ref="cariSecDlg" Title="Cari Seç">
+        <Body>
+            @if (cariyeler_hehehe?.Any() == true)
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>SysUserId</th>
+                            <th>SysUserName</th>
+                            <th>Seç</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in cariyeler_hehehe)
+                        {
+                            <tr>
+                                <td>@item.CariKartId</td>
+                                <td>@item.Isim</td>
+                                <td>
+                                    <button class="btn btn-primary" @onclick="()=> CariSec(item.CariKartId, item.Isim)">Seç</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-danger" role="alert">
+                    Hiç cari kart oluşturulmamış.
+                </div>
+            }
+
         </Body>
         <Footer>
             <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
@@ -85,22 +138,46 @@
 }
 
 
+
 @*https://www.meziantou.net/anchor-navigation-in-a-blazor-application.htm*@
 
 
 @code {
-    private List<SysUser> users;
-    private SysUser user = new SysUser();
-    private string newPassword = "";
-
 
     private string? hata;
+
+    #region Kullanıcıları Listele
+
+    private List<SysUser> users;
+    private void RefreshList()
+    {
+        using (var db = new DB())
+        {
+            users = db.Users.AsNoTracking()
+            .Include(x => x.CariKart)
+            .ToList();
+
+        }
+        Yeni();
+        InvokeAsync(() => StateHasChanged());
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        RefreshList();
+    }
+    #endregion
+
+    #region Kullanıcı Sil
     ModalForm silDlg;
     private int silinecekId = -1;
     private int silinecekIdValidate = 0;
 
     private void ShowSilDlg(int id)
     {
+        hata = null;
         silinecekId = id;
         silDlg.Open();
     }
@@ -135,13 +212,21 @@
 
     }
 
+    #endregion
+
+    #region Kullanıcı Ekle / Düzenle
+    private SysUser user = new SysUser();
+    private string newPassword = "";
 
     private void Duzenle(int id)
     {
         using (var db = new DB())
         {
-            user = db.Users.AsNoTracking().Where(x => x.SysUserId == id).FirstOrDefault() ?? new SysUser();
+            user = db.Users.AsNoTracking()
+            .Include(x => x.CariKart)
+            .Where(x => x.SysUserId == id).FirstOrDefault() ?? new SysUser();
             newPassword = "";
+            seciliCariIsim = user.CariKart?.Isim;
         }
         //https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/call-javascript-from-dotnet?view=aspnetcore-6.0
         JS.InvokeVoidAsync("jump", "kullaniciekle");
@@ -151,7 +236,7 @@
     {
         user = new SysUser();
         newPassword = "";
-
+        seciliCariIsim = null;
     }
 
     private void Kaydet()
@@ -244,21 +329,40 @@
         }
 
     }
+    #endregion
 
-    private void RefreshList()
+    #region Cari Seç
+    private List<CariKart> cariyeler_hehehe;
+    ModalForm cariSecDlg;
+    string? seciliCariIsim;
+
+    private void CariSecGoster()
     {
         using (var db = new DB())
         {
-            users = db.Users.AsNoTracking().ToList();
-
+            cariyeler_hehehe = db.CariKart.AsNoTracking().ToList();
         }
-        InvokeAsync(() => StateHasChanged());
+        hata = null;
+        cariSecDlg.Open();
 
     }
 
-
-    protected override async Task OnInitializedAsync()
+    private void CariSec(int carikarId, string isim)
     {
-        RefreshList();
+        seciliCariIsim = isim;
+        user.CariKartId = carikarId;
+        cariSecDlg.Close();
     }
+    #endregion
+
+
+
+
+
+
+
+
+
+
+
 }

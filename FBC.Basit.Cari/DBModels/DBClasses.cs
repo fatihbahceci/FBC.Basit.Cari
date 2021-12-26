@@ -21,6 +21,7 @@ namespace FBC.Basit.Cari.DBModels
         public bool IsAdmin { get; set; }
         public bool IsCanEditData { get; set; }
         public int? CariKartId { get; set; }
+        public CariKart? CariKart { get; set; }
 
         /// <summary>
         /// SysUserPassword'a dokunmaz. Onu ayrıca set etmeniz gerekir. 
