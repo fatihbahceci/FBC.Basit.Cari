@@ -44,39 +44,31 @@
 
 @if (users != null)
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>SysUserId</th>
-                <th>SysUserName</th>
-                <th>Name</th>
-                <th>Surname</th>
-                <th>IsAdmin</th>
-                <th>IsCanEditData</th>
-                <th>CariKartId</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in users)
-            {
-                <tr>
-                    <td>@item.SysUserId</td>
-                    <td>@item.SysUserName</td>
-                    <td>@item.Name</td>
-                    <td>@item.Surname</td>
-                    <td>@item.IsAdmin</td>
-                    <td>@item.IsCanEditData</td>
-                    <td>@item.CariKartId</td>
-                    <td>
-                        <button class="btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
-                        <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)">Sil</a>
-
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="row">
+        @foreach (var item in users)
+        {
+            <div class="col-4 g-5">
+                <div class="card">
+                    <h5 class="card-header"> @item.SysUserId - @item.Name @item.Surname (@item.SysUserName) </h5>
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" @bind="item.IsAdmin" type="checkbox" onclick="return false;" />
+                            <label class="form-check-label">IsAdmin</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" @bind="item.IsCanEditData" type="checkbox" onclick="return false;" />
+                            <label class="form-check-label">IsCanEditData</label>
+                        </div>
+                        <span class="form-control">Bağlı Cari: @item.CariKart?.Isim</span>
+                        <div class="row">
+                            <button class="col m-1 btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
+                            <a class="col m-1 btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)" href="javascript:void();" >Sil</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 
     <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
         <Body>
