@@ -30,6 +30,7 @@ namespace FBC.Basit.Cari.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Tarih = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Aciklama = table.Column<string>(type: "TEXT", nullable: true),
+                    EvrakNo = table.Column<string>(type: "TEXT", nullable: true),
                     Borc = table.Column<decimal>(type: "TEXT", nullable: false),
                     Alacak = table.Column<decimal>(type: "TEXT", nullable: false),
                     VadeTarihi = table.Column<DateTime>(type: "TEXT", nullable: true),
@@ -46,9 +47,38 @@ namespace FBC.Basit.Cari.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    SysUserId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    SysUserName = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Surname = table.Column<string>(type: "TEXT", nullable: false),
+                    SysUserPassword = table.Column<string>(type: "TEXT", nullable: false),
+                    IsAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsCanEditData = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CariKartId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.SysUserId);
+                    table.ForeignKey(
+                        name: "FK_Users_CariKart_CariKartId",
+                        column: x => x.CariKartId,
+                        principalTable: "CariKart",
+                        principalColumn: "CariKartId");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_CariHareket_CariKartId",
                 table: "CariHareket",
+                column: "CariKartId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_CariKartId",
+                table: "Users",
                 column: "CariKartId");
         }
 
@@ -56,6 +86,9 @@ namespace FBC.Basit.Cari.Migrations
         {
             migrationBuilder.DropTable(
                 name: "CariHareket");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "CariKart");

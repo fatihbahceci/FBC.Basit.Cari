@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FBC.Basit.Cari.Migrations
 {
     [DbContext(typeof(DB))]
-    [Migration("20211214212948_CariHareketEvrakNo")]
-    partial class CariHareketEvrakNo
+    [Migration("20211226103603_first")]
+    partial class first
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -68,6 +68,44 @@ namespace FBC.Basit.Cari.Migrations
                     b.ToTable("CariKart");
                 });
 
+            modelBuilder.Entity("FBC.Basit.Cari.DBModels.SysUser", b =>
+                {
+                    b.Property<int>("SysUserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CariKartId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCanEditData")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SysUserName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SysUserPassword")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SysUserId");
+
+                    b.HasIndex("CariKartId");
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("FBC.Basit.Cari.DBModels.CariHareket", b =>
                 {
                     b.HasOne("FBC.Basit.Cari.DBModels.CariKart", "CariKart")
@@ -75,6 +113,15 @@ namespace FBC.Basit.Cari.Migrations
                         .HasForeignKey("CariKartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CariKart");
+                });
+
+            modelBuilder.Entity("FBC.Basit.Cari.DBModels.SysUser", b =>
+                {
+                    b.HasOne("FBC.Basit.Cari.DBModels.CariKart", "CariKart")
+                        .WithMany()
+                        .HasForeignKey("CariKartId");
 
                     b.Navigation("CariKart");
                 });

@@ -6,7 +6,7 @@ using FBC.Basit.Cari.Auth;
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
-
+FBC.Basit.Cari.DBModels.DB.MigrateDB();
 // Add services to the container.
 //builder.Services.AddCookiePolicy
 builder.Services.AddRazorPages();
