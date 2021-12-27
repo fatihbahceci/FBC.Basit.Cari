@@ -1,7 +1,5 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthenticationStateProvider
-
 @inherits LayoutComponentBase
 
 <PageTitle>FBC.Basit.Cari</PageTitle>
@@ -40,31 +38,50 @@
             </NotAuthorized>
         </AuthorizeView>
 
-
-        <article class="content px-4">
-            @Body
-        </article>
+        <CascadingValue Value="userCariKartId" Name="userCariKartId">
+            <article class="content px-4">
+                @Body
+            </article>
+        </CascadingValue>
     </main>
 </div>
 
 
 @code {
-    private string userTitle = "";
+    private string userTitle { get; set; } = "";
+    private int? userCariKartId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> aState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await aState;
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+
+        if (user?.Identity?.IsAuthenticated == true)
         {
-            string name = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value;
-            string surname = user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
-            string userName = user.FindFirst(c => c.Type == ClaimTypes.Sid)?.Value;
+            string? name = user?.FindFirst(c => c.Type == ClaimTypes.Name)?.Value;
+            string? surname = user?.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
+            string? userName = user?.FindFirst(c => c.Type == ClaimTypes.Sid)?.Value;
             userTitle = $"{name} {surname} ({userName}) ";
+            string? id = user?.FindFirst(c => c.Type == "CariKartId")?.Value;
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                userCariKartId = int.Parse(id);
+            }
+            else
+            {
+                //Tüm kayıtları dön
+                userCariKartId = null;
+            }
         }
         else
         {
             userTitle = "";
+            //Boş kayıt dön (tüm idler sıfırdan büyük olacağı için)
+            userCariKartId = -1;
         }
         //InvokeAsync(() => StateHasChanged());
         StateHasChanged();

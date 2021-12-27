@@ -31,7 +31,7 @@
     string loginMessage;
     bool trying = false;
 
-
+    
     void TryLogin()
     {
 
@@ -41,7 +41,15 @@
             InvokeAsync(() => StateHasChanged());
             if (mgr.Login(userName, password))
             {
+                //True parametresi sırf sayfayı refresh etmesi için.
+                //TODO Şu an blazor'un kurduğu yapının içinden geçtik. SignalR ağlıyor, webscocket... o da ağlıyordu. 
+                //Ancak gelin görün ki bu işe gereğinden fazla zaman ayırdım ve Authorize olayınının bu kısmı araştırmaya fazla vaktim yok.
+                //Şimdilik cookie ile bu işi çözdük. Hem böylelikle farklı sekmelerde de uygulamamız sorunsuz çalışıyor. 
+                //5 Dk'lık timeout koyduğumuz için (see: FBCAuth.UserSessionManager.IDLE_TIME_LIMIT_SECONDS) websocket bağlantısı devam etse de 
+                //auth ölüyor ama olsun. sonra bu işi dengeleriz. Ya çerezden vazgeçeriz ya da WebSocket oturumuna dahil olmanın yolunu buluruz.
+                // En kötü çerezden vazgeçer, Blazor'un öngördüğü çalışma şekline teslim olarak tek sekmeden çalıştırmaya teşvik ederiz kullancıyı. 
                 Navi.NavigateTo("/", true);
+                //Navi.NavigateTo("/");
 
             }
             else

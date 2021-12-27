@@ -1,9 +1,6 @@
 ﻿@page "/"
 @using Microsoft.EntityFrameworkCore;
 @using FBC.Components
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Cari Liste</PageTitle>
 
@@ -75,8 +72,6 @@ else
     </table>
     <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
-
-
     <AuthorizeView Roles="CanEditData">
         @if (cariKartIdOnly == null)
         {
@@ -112,23 +107,10 @@ else
     ModalForm silDlg;
     private int silinecekId = -1;
     private int silinecekIdValidate = 0;
-    private int? cariKartIdOnly = null;
 
-    private async Task<int?> getCariKartIdOnly()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity.IsAuthenticated)
-        {
-            string id = user.FindFirst(c => c.Type == "CariKartId")?.Value;
+    [CascadingParameter(Name = "userCariKartId")]
+    private int? cariKartIdOnly { get; set; }
 
-            if (!string.IsNullOrEmpty(id))
-            {
-                return int.Parse(id);
-            }
-        }
-        return null;
-    }
 
     private void ShowSilDlg(int id)
     {
@@ -203,7 +185,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        cariKartIdOnly = await getCariKartIdOnly();
         RefreshList();
     }
 }

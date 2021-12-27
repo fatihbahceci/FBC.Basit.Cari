@@ -2,9 +2,6 @@
 @using Microsoft.EntityFrameworkCore;
 @using System.Linq;
 @using FBC.Components;
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 
 
@@ -116,23 +113,8 @@ else
     private CariHareket hareket = new CariHareket();
     private string? hata;
 
-    private int? cariKartIdOnly = null;
-
-    private async Task<int?> getCariKartIdOnly()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity.IsAuthenticated)
-        {
-            string id = user.FindFirst(c => c.Type == "CariKartId")?.Value;
-
-            if (!string.IsNullOrEmpty(id))
-            {
-                return int.Parse(id);
-            }
-        }
-        return null;
-    }
+    [CascadingParameter(Name = "userCariKartId")]
+    private int? cariKartIdOnly { get; set; }
 
     ModalForm silDlg;
     private int silinecekId = -1;
@@ -268,7 +250,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        cariKartIdOnly = await getCariKartIdOnly();
         RefreshList();
     }
 }
