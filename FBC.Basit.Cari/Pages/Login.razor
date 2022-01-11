@@ -1,6 +1,6 @@
 ﻿@using FBC.Basit.Cari.Auth
 @attribute [AllowAnonymous]
-@inject UserSessionManager mgr
+@inject AuthenticationStateProvider mgr
 @inject NavigationManager Navi
 
 @page "/Login"
@@ -39,7 +39,7 @@
         {
             trying = true;
             InvokeAsync(() => StateHasChanged());
-            if (mgr.Login(userName, password))
+            if ((mgr as SessionedAuthenticationStateProvider).Login(userName, password))
             {
                 //True parametresi sırf sayfayı refresh etmesi için.
                 //TODO Şu an blazor'un kurduğu yapının içinden geçtik. SignalR ağlıyor, webscocket... o da ağlıyordu. 

@@ -5,36 +5,69 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.JSInterop;
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 namespace FBC.Basit.Cari.Auth
 {
 
-    class UserDataHolder
+    internal class SessionManager
     {
-        public DateTime Created { get; }
-        public DateTime LastActionDate { get; private set; }
-        public SysUser User { get; }
+        private static readonly ConcurrentDictionary<string, SessionHolder> sessions = new ConcurrentDictionary<string, SessionHolder>();
 
-        public UserDataHolder(SysUser user)
+        internal SessionHolder GetOrCreateSessionHolder(HttpContext? context)
         {
-            Created = LastActionDate = DateTime.Now;
-            User = user;
+            string? sessionId = SessionHolder.GenerateSessionIdFromContext(context);
+            if (!string.IsNullOrEmpty(sessionId))
+            {
+                if (!sessions.ContainsKey(sessionId))
+                {
+                    var sessionHolder = new SessionHolder(sessionId);
+                    sessions[sessionId] = sessionHolder;
+                    return sessionHolder;
+                }
+                else
+                {
+                    if (sessions.TryGetValue(sessionId, out SessionHolder? sessionHolder))
+                    {
+                        if (sessionHolder != null)
+                        {
+                            return sessionHolder;
+                        }
+                    }
+                }
+            }
+            throw new InvalidOperationException($"SESSION_NOT_FOUND_OR_CREATED ({sessionId})");
         }
-
-        public void HadAction() => LastActionDate = DateTime.Now;
     }
 
-    class SessionAIUser
-    {
-        public string? UserId { get; }
-        //public string? UserCreatedDate { get; }
-        //public string? SessionId { get; }
-        //public string? SessionCreatedDate { get; }
-        //public string? SessionUpdatedDate { get; }
 
-        public SessionAIUser(HttpContext? context)
+
+    internal class SessionHolder : IDisposable
+    {
+        //private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
+
+        public string? SessionId { get; }
+        public DateTime Created { get; }
+        public DateTime LastActionDate { get; private set; }
+        public event EventHandler<SysUser?> OnSessionStateChanged;
+        public SysUser? User { get; private set; }
+
+        private void UpdateSessionState()
         {
+            OnSessionStateChanged?.Invoke(this, User);
+        }
+
+        public void setUser(SysUser user)
+        {
+            User = user;
+            UpdateSessionState();
+        }
+        public void HadAction() => LastActionDate = DateTime.Now;
+
+        public static string? GenerateSessionIdFromContext(HttpContext? context)
+        {
+            string? id = null;
             if (context != null && context.Request != null && context.Request.Cookies != null && context.Request.Cookies.Any())
             {
                 var c = context.Request.Cookies;
@@ -43,15 +76,17 @@ namespace FBC.Basit.Cari.Auth
                     if (!string.IsNullOrEmpty(fbcid))
                     {
 
-                        this.UserId = fbcid;
+                        id = fbcid;
 
                         //add ip addr too when only cookie is working
                         try
                         {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                             String ip = context.Connection.RemoteIpAddress.ToString();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                             if (!string.IsNullOrEmpty(ip))
                             {
-                                this.UserId += ip;
+                                id += ip;
                             }
                             //Console.WriteLine("ip:" + ip);
                         }
@@ -59,113 +94,25 @@ namespace FBC.Basit.Cari.Auth
                         {
 
                         }
-
                     }
                 }
-
             }
+
+            return id;
         }
 
+        public void Dispose()
+        {
+            this.User = null;
+            UpdateSessionState();
+        }
 
+        public SessionHolder(string sessionId)
+        {
+            Created = LastActionDate = DateTime.Now;
+            this.SessionId = sessionId;
+        }
     }
-
-    public class UserSessionManager
-    {
-        private static ConcurrentDictionary<string, UserDataHolder> _users;
-        private static DateTime lastPerodicalIdleChecked = DateTime.Now;
-        private const long IDLE_TIME_LIMIT_SECONDS = 60 * 5;
-        private HttpContext? context;
-        private SessionAIUser aiData;
-        private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
-
-        static UserSessionManager()
-        {
-            _users = new ConcurrentDictionary<string, UserDataHolder>();
-        }
-        private static void PerodicalIdleCheck()
-        {
-            if ((DateTime.Now - lastPerodicalIdleChecked).TotalSeconds > 60 * 3)
-            {
-                var dead = _users.Where(x =>
-
-                 x.Value == null
-                 || (x.Value != null && (DateTime.Now - x.Value.LastActionDate).TotalSeconds > IDLE_TIME_LIMIT_SECONDS)
-                ).Select(x => x.Key).ToList();
-
-                if (dead.Any())
-                {
-                    dead.ForEach(x => _users.TryRemove(x, out UserDataHolder? mahmutHoca));
-                }
-            }
-        }
-
-        public UserSessionManager(IHttpContextAccessor contextAccessor)
-        {
-            this.context = contextAccessor.HttpContext;
-            aiData = new SessionAIUser(this.context);
-        }
-
-        public SysUser? GetLoggedInUser()
-        {
-            PerodicalIdleCheck();
-            if (!string.IsNullOrEmpty(aiData.UserId) && _users.TryGetValue(aiData.UserId, out var userDataHolder))
-            {
-                if (userDataHolder != null)
-                {
-                    if ((DateTime.Now - userDataHolder.LastActionDate).TotalSeconds < IDLE_TIME_LIMIT_SECONDS && userDataHolder.User != null)
-                    {
-                        userDataHolder.HadAction();
-                        return userDataHolder.User;
-                    }
-                    else
-                    {
-                        _users.TryRemove(aiData.UserId, out userDataHolder);
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public bool Login(string userName, string password)
-        {
-            if (!string.IsNullOrEmpty(aiData.UserId))
-            {
-                using (var db = new DB())
-                {
-                    var user = db.Users.Where(x => x.SysUserName == userName && SysUser.ToMD5(password) == x.SysUserPassword).FirstOrDefault();
-                    if (user != null)
-                    {
-                        _users[aiData.UserId] = new UserDataHolder(user);
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            throw new Exception(COOKIE_ERROR);
-        }
-
-        public void Logout()
-        {
-
-            if (!string.IsNullOrEmpty(aiData.UserId))
-            {
-                _users.TryRemove(aiData.UserId, out var userDataHolder);
-            }
-            else
-            {
-                throw new Exception(COOKIE_ERROR);
-
-            }
-
-        }
-
-    }
-
-
 
 
     /// <summary>
@@ -176,18 +123,54 @@ namespace FBC.Basit.Cari.Auth
     /// https://docs.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-6.0#session-state
     /// https://docs.microsoft.com/en-us/aspnet/core/blazor/state-management?view=aspnetcore-6.0&pivots=server#where-to-persist-state
     /// </summary>
-    public class CustomAuthStateProvider : AuthenticationStateProvider
+    public class SessionedAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private HttpContext? context;
-        private UserSessionManager userMgr;
-        public CustomAuthStateProvider(IHttpContextAccessor context, UserSessionManager userMgr)
+        private static SessionManager mgr;
+
+        #region just for test something
+        private static int providerIdcounter = 0;
+        private SessionHolder sessionHolder;
+
+        public int Id { get; private set; }
+        private void genId()
         {
-            this.context = context.HttpContext;
-            this.userMgr = userMgr;
+            if (providerIdcounter < int.MaxValue) providerIdcounter++; else providerIdcounter = 1;
+            this.Id = providerIdcounter;
         }
+        #endregion
+        static SessionedAuthenticationStateProvider()
+        {
+            mgr = new SessionManager();
+        }
+        public SessionedAuthenticationStateProvider(IHttpContextAccessor context)
+        {
+            genId();
+#pragma warning disable CS8601 // Possible null reference assignment.
+            
+#pragma warning restore CS8601 // Possible null reference assignment.
+            this.sessionHolder = mgr.GetOrCreateSessionHolder(context.HttpContext);
+            sessionHolder.OnSessionStateChanged += (s, e) =>
+            {
+                UpdateState();
+            };
+
+        }
+
+        public void UpdateState()
+        {
+            // If AuthorizedModel model contains a Jwt token or whatever which you 
+            // save in the 
+            // local storage, then add it back as a parameter to the AuthenticateUser
+            // and place here the logic to save it in the local storage
+            // After which call NotifyAuthenticationStateChanged method like this.
+
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+
+
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var lUser = userMgr.GetLoggedInUser();
+            var lUser = sessionHolder?.User;
             if (lUser != null)
             {
                 List<Claim> claims = new List<Claim>();
@@ -217,104 +200,152 @@ namespace FBC.Basit.Cari.Auth
             {
                 return Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
             }
-
-
-
-
-
         }
-    }
 
-
-    /*
-     
- var kelle = new Dictionary<string, string>();
-            kelle["context.TraceIdentifier"] = context.TraceIdentifier;
-            //kelle[""] = context.Request.Cookies
-            kelle["context.Connection.Id"] = context.Connection.Id;
-            kelle["context.Connection.RemoteIpAddress"] = context.Connection.RemoteIpAddress?.ToString();
-            kelle["context.Connection.RemotePort"] = context.Connection.RemotePort + "";
-            kelle["context.Connection.LocalIpAddress"] = context.Connection.LocalIpAddress?.ToString();
-            kelle["context.Connection.LocalPort"] = context.Connection.LocalPort + "";
-            foreach (var item in context.Items)
+        public bool Login(string userName, string password)
+        {
+          
+            if (sessionHolder != null)
             {
-                kelle["context.Items-" + item.Key?.ToString()] = item.Value?.ToString();
+                using (var db = new DB())
+                {
+                    var user = db.Users.Where(x => x.SysUserName == userName && SysUser.ToMD5(password) == x.SysUserPassword).FirstOrDefault();
+                    if (user != null)
+                    {
+                        sessionHolder.setUser(user);
+                        //UpdateState();
+                        return true;
+                    }
+                    else
+                    {
+                        //UpdateState();
+                        return false;
+                    }
+                }
             }
+            //UpdateState();
+            throw new InvalidOperationException("SESSION_NOT_FOUND_OR_CREATED");
+        }
 
-            foreach (var item in context.Request.Cookies)
+        public void Logout()
+        {
+          
+            if (sessionHolder != null)
             {
-                kelle["context.Request.Cookies-" + item.Key?.ToString()] = item.Value?.ToString();
+                sessionHolder.setUser(null);
             }
+            //UpdateState();
+        }
 
-
-
-            //if (context.Session != null)
+        public static string getSummary()
+        {
+            StringBuilder sb = new StringBuilder("Summary");
+            //foreach (var key in keys)
             //{
-            //    kelle["context.Session"] = context.Session?.Id;
-            //    foreach (var item in context.Session.Keys)
+            //    sb.AppendLine($"key: {key}");
+            //    if (_users.TryGetValue(key, out var userDataHolder))
             //    {
-            //        try
+            //        if (userDataHolder != null)
             //        {
-
-            //            kelle["context.Session.Keys-" + item] = context.Session.GetString(item);
+            //            foreach (var item in userDataHolder.Providers)
+            //            {
+            //                sb.AppendLine($"    providerId: {item.Id}");
+            //            }
             //        }
-            //        catch (Exception exc)
-            //        {
-
-            //            kelle["context.Session.Keys-" + item] = "Error: " + exc.Message;
-            //        }
-
             //    }
+
             //}
+            return sb.ToString();
+        }
 
-            //var claims = kelle.Select(item => new Claim(ClaimTypes.Role, item.Key + "=" + item.Value)).ToList();
-            var claims = kelle.Select(item => new Claim(item.Key, item.Value)).ToList();     
-
-            claims.Add(new Claim(ClaimTypes.Name, "Mok"));
-            claims.Add(new Claim(ClaimTypes.Surname, "Kafa"));
-            claims.Add(new Claim(ClaimTypes.Role, "A"));
-            var identity = new ClaimsIdentity(claims, "Fake authentication type");
-     */
-
-    //public static class KelleMW
-    //{
-    //    public static void UseFBC(this IApplicationBuilder app)
-    //    {
-    //        app.Use(async (context, next) =>
-    //        {
-    //            var cultureQuery = context.Request.Query["culture"];
-    //            // Call the next delegate/middleware in the pipeline
-    //            await next();
-    //        });
-    //    }
-    //}
-
-    //public class HttpContextItemsMiddleware
-    //{
-    //    private readonly RequestDelegate _next;
-    //    public static readonly object HttpContextItemsMiddlewareKey = new();
-
-    //    public HttpContextItemsMiddleware(RequestDelegate next)
-    //    {
-    //        _next = next;
-    //    }
-
-    //    public async Task Invoke(HttpContext httpContext)
-    //    {
-    //        httpContext.Items[HttpContextItemsMiddlewareKey] = "K-9";
-
-    //        await _next(httpContext);
-    //    }
-    //}
-
-    //public static class HttpContextItemsMiddlewareExtensions
-    //{
-    //    public static IApplicationBuilder
-    //        UseHttpContextItemsMiddleware(this IApplicationBuilder app)
-    //    {
-    //        return app.UseMiddleware<HttpContextItemsMiddleware>();
-    //    }
-    //}
-
-
+    }
 }
+
+
+//public static class TestMW
+//{
+//    public static void UseFBC(this IApplicationBuilder app)
+//    {
+//        app.Use(async (context, next) =>
+//        {
+//            var cultureQuery = context.Request.Query["culture"];
+//            // Call the next delegate/middleware in the pipeline
+//            await next();
+//        });
+//    }
+//}
+
+//public class HttpContextItemsMiddleware
+//{
+//    private readonly RequestDelegate _next;
+//    public static readonly object HttpContextItemsMiddlewareKey = new();
+
+//    public HttpContextItemsMiddleware(RequestDelegate next)
+//    {
+//        _next = next;
+//    }
+
+//    public async Task Invoke(HttpContext httpContext)
+//    {
+//        httpContext.Items[HttpContextItemsMiddlewareKey] = "K-9";
+
+//        await _next(httpContext);
+//    }
+//}
+
+//public static class HttpContextItemsMiddlewareExtensions
+//{
+//    public static IApplicationBuilder
+//        UseHttpContextItemsMiddleware(this IApplicationBuilder app)
+//    {
+//        return app.UseMiddleware<HttpContextItemsMiddleware>();
+//    }
+//}
+//}
+
+
+//private const long IDLE_TIME_LIMIT_SECONDS = 60 * 5;
+//private const bool ENABLE_SESSION_IDLE_TIME_LIMIT = true;
+//private static DateTime lastPerodicalIdleChecked = DateTime.Now;
+
+//private static void PerodicalIdleCheck()
+//{
+//    if ((DateTime.Now - lastPerodicalIdleChecked).TotalSeconds > 60 * 3)
+//    {
+//        var dead = _users.Where(x =>
+
+//         x.Value == null
+//         || (x.Value != null && (DateTime.Now - x.Value.LastActionDate).TotalSeconds > IDLE_TIME_LIMIT_SECONDS)
+//        ).Select(x => x.Key).ToList();
+
+//        if (dead.Any())
+//        {
+//            dead.ForEach(x => _users.TryRemove(x, out UserDataHolder? mahmutHoca));
+//        }
+//    }
+//}
+//private UserDataHolder? getHolder()
+//{
+//    if (!string.IsNullOrEmpty(aiData.SessionId) && _users.TryGetValue(aiData.SessionId, out var userDataHolder))
+//    {
+//        return userDataHolder;
+//    }
+//    return null;
+//}
+//public SysUser? GetLoggedInUser()
+//{
+//    var userDataHolder = getHolder();
+//    if (userDataHolder != null)
+//    {
+//        if ((DateTime.Now - userDataHolder.LastActionDate).TotalSeconds < IDLE_TIME_LIMIT_SECONDS && userDataHolder.User != null)
+//        {
+//            userDataHolder.HadAction();
+//            return userDataHolder.User;
+//        }
+//        else
+//        {
+//            _users.TryRemove(aiData.SessionId, out userDataHolder);
+//        }
+//    }
+//    return null;
+//}
