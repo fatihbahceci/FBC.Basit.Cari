@@ -25,19 +25,19 @@
     </div>
 
     <main>
-        <AuthorizeView>
-            <Authorized>
-                <div class="top-row px-4">
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
                     <span class="badge rounded-pill bg-primary">@userTitle</span>
                     <a class="badge rounded-pill bg-dark" href="/Logout">Çıkış</a>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="top-row px-4">
+                </Authorized>
+                <NotAuthorized>
                     <a href="/Login">Giriş</a>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
+
+                </NotAuthorized>
+            </AuthorizeView>
+            <a href="javascript:void(0);" @onclick="()=> {showVersion = !showVersion;}">@(showVersion ?TypeHelper.GetAppVersionInfo():"?")</a>
+        </div>
 
         <CascadingValue Value="userCariKartId" Name="userCariKartId">
             <article class="content px-4">
@@ -51,13 +51,13 @@
 @code {
     private string userTitle { get; set; } = "";
     private int? userCariKartId { get; set; }
-
+    private bool showVersion = false;
     [CascadingParameter]
     private Task<AuthenticationState> aState { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        
+
 
     }
 

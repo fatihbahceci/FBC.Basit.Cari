@@ -4,6 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyVersion>0.0.1.1</AssemblyVersion>
+    <FileVersion>0.0.1.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,3 +30,23 @@
   </ItemGroup>
 
 </Project>
+<!--
+Version History
+Types
+[BG] Bug
+[NF] New Feature
+[RN] Release Notes
+[RC] Release Candidate/Release
+[EN] Enhancement/Improvement
+[OT] Other
+[TD] TO-DO
+******************************
+yyyy.MM.dd-Version-Author
+    Type - Comment 
+        Sub comment
+******************************
+FBC.Basit.Cari
+******************************
+2022.01.16-0.0.1.1-[FatihB] 
+    [EN] - Added version info to project
+-->
