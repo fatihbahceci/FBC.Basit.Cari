@@ -37,7 +37,8 @@ namespace FBC.Basit.Cari.Auth
                     }
                 }
             }
-            throw new InvalidOperationException($"SESSION_NOT_FOUND_OR_CREATED ({sessionId})");
+            //throw new InvalidOperationException($"SESSION_NOT_FOUND_OR_CREATED ({sessionId})");
+            return null;
         }
     }
 
@@ -95,7 +96,36 @@ namespace FBC.Basit.Cari.Auth
 
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine($"FBC WARNING: TryGetValue is failed");
+
+                    }
                 }
+                else
+                {
+                    Console.WriteLine($"FBC WARNING: fbcid is null or empty");
+                }
+            }
+            else
+            {
+                if (context == null)
+                {
+                    Console.WriteLine($"FBC WARNING: Context is null");
+                }
+                else if (context.Request == null)
+                {
+                    Console.WriteLine($"FBC WARNING: Request is null");
+                }
+                else if (context.Request.Cookies == null)
+                {
+                    Console.WriteLine($"FBC WARNING: Cookies is null");
+                }
+                else if (!context.Request.Cookies.Any())
+                {
+                    Console.WriteLine($"FBC WARNING:Cookies is empty");
+                }
+
             }
 
             return id;
@@ -146,13 +176,16 @@ namespace FBC.Basit.Cari.Auth
         {
             genId();
 #pragma warning disable CS8601 // Possible null reference assignment.
-            
+
 #pragma warning restore CS8601 // Possible null reference assignment.
             this.sessionHolder = mgr.GetOrCreateSessionHolder(context.HttpContext);
-            sessionHolder.OnSessionStateChanged += (s, e) =>
+            if (sessionHolder != null)
             {
-                UpdateState();
-            };
+                sessionHolder.OnSessionStateChanged += (s, e) =>
+                {
+                    UpdateState();
+                };
+            }
 
         }
 
@@ -204,7 +237,7 @@ namespace FBC.Basit.Cari.Auth
 
         public bool Login(string userName, string password)
         {
-          
+
             if (sessionHolder != null)
             {
                 using (var db = new DB())
@@ -229,7 +262,7 @@ namespace FBC.Basit.Cari.Auth
 
         public void Logout()
         {
-          
+
             if (sessionHolder != null)
             {
                 sessionHolder.setUser(null);

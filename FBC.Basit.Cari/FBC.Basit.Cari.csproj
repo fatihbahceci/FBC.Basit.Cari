@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -47,6 +47,8 @@ yyyy.MM.dd-Version-Author
 ******************************
 FBC.Basit.Cari
 ******************************
+2022.01.16-0.0.1.2-[FatihB] 
+    [BG] - System.InvalidOperationException: SESSION_NOT_FOUND_OR_CREATED ()
 2022.01.16-0.0.1.1-[FatihB] 
     [EN] - Added version info to project
 -->
