@@ -16,7 +16,13 @@ else
     var toplamAlacak = model.Hareketler.Sum(x => x.Alacak);
 
     <PageTitle>@model.Isim - Cari Göster</PageTitle>
-    <h1 id="cariekle">@model.Isim</h1>
+
+    <h1>@model.Isim</h1>
+    if (!string.IsNullOrEmpty(model.Notlar)) {
+        <h2>Notlar:</h2>
+        <pre>@model.Notlar</pre>
+    }
+    <id id="cariekle" />
     <AuthorizeView Roles="CanEditData">
         <div class="container px-5 my-5">
             <div class="row">

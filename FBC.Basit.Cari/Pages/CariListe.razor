@@ -1,23 +1,20 @@
 ﻿@page "/"
 @using Microsoft.EntityFrameworkCore;
 @using FBC.Components
+@inject IJSRuntime JS
 
 <PageTitle>Cari Liste</PageTitle>
-
+<div id="top"/>
 <AuthorizeView Roles="CanEditData">
     @if (cariKartIdOnly == null)
     {
-        <div class=row>
-            <div class="container px-5 my-5">
-                <div class="form-floating mb-3">
-                    <input class="form-control" @bind="yeniCariIsim" id="cariIsim" type="text" placeholder="Cari İsim" data-sb-validations="" />
-                    <label for="cariIsim">Cari İsim</label>
-                </div>
-                <div class="d-grid">
-                    <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Ekle">Ekle</button>
-                </div>
+        <CariEkleDuzenle @bind-Model="cariKart" SaveClick="Kaydet" CancelClick="Vazgec" />
+        if (!string.IsNullOrEmpty(cariKartHata))
+        {
+            <div class="alert alert-danger" role="alert">
+                @cariKartHata
             </div>
-        </div>
+        }
     }
 </AuthorizeView>
 @if (liste == null)
@@ -49,23 +46,31 @@ else
             {
                 if (!bakiyesiOlmayanlariGizle || (bakiyesiOlmayanlariGizle && item.Bakiye != 0))
                 {
+                    bool hasNote = !string.IsNullOrEmpty(item.Notlar);
                     <tr>
-                        <td>@item.CariKartId</td>
+                        <td rowspan="@(hasNote ? "2" : "")">@item.CariKartId</td>
                         <td>@item.Isim</td>
                         <td>@($"₺{item.Borc:n}")</td>
                         <td>@($"₺{item.Alacak:n}")</td>
                         <td>@($"₺{item.Bakiye:n}")</td>
-                        <td>
+                        <td rowspan="@(hasNote ? "2" : "")">
                             <a href="/cari/goster/@item.CariKartId" class="btn btn-primary">Aç</a>
 
                             <AuthorizeView Roles="CanEditData">
                                 @if (cariKartIdOnly == null)
                                 {
                                     <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariKartId)">Sil</a>
+                                    <a href="javascript:void();" class="btn btn-secondary" @onclick="() => Duzenle(item)">Düzenle</a>
                                 }
                             </AuthorizeView>
                         </td>
                     </tr>
+                    if (hasNote)
+                    {
+                        <tr>
+                            <td colspan="4">Notlar:     @item.Notlar</td>
+                        </tr>
+                    }
                 }
             }
         </tbody>
@@ -95,6 +100,7 @@ else
     {
         public int CariKartId { get; set; }
         public string Isim { get; set; }
+        public string? Notlar { get; set; }
         public decimal Borc { get; set; }
         public decimal Alacak { get; set; }
         public decimal Bakiye { get => Alacak - Borc; }
@@ -102,7 +108,8 @@ else
     }
 
     private List<CariOzet>? liste;
-    private string yeniCariIsim;
+    private CariKart cariKart = new CariKart();
+    private string? cariKartHata = null;
     private bool bakiyesiOlmayanlariGizle;
     ModalForm silDlg;
     private int silinecekId = -1;
@@ -138,24 +145,55 @@ else
 
     }
 
-    private void Ekle()
+    private void Duzenle(CariOzet ozet)
     {
-        if (!string.IsNullOrEmpty(yeniCariIsim))
+        cariKart = new CariKart() { CariKartId = ozet.CariKartId, Isim = ozet.Isim, Notlar = ozet.Notlar };
+        JS.InvokeVoidAsync("jump", "top");
+    }
+
+    private void Vazgec()
+    {
+        cariKart = new CariKart();
+        cariKartHata = null;
+    }
+
+    private void Kaydet()
+    {
+        if (string.IsNullOrEmpty(cariKart.Isim?.Trim()))
+        {
+            cariKartHata = "İsim boş olamaz!";
+        }
+        else
+        if (cariKart.CariKartId > 0)
         {
             using (var db = new DB())
             {
-
-                db.CariKart.Add(new CariKart() { Isim = yeniCariIsim });
-                db.SaveChanges();
-
-                yeniCariIsim = null;
-                //InvokeAsync(() => RefreshList());
+                var exists = (from x in db.CariKart where x.CariKartId == cariKart.CariKartId select x).FirstOrDefault();
+                if (exists != null)
+                {
+                    exists.Isim = cariKart.Isim;
+                    exists.Notlar = cariKart.Notlar;
+                    db.SaveChanges();
+                    cariKart = new CariKart();
+                    cariKartHata = null;
+                    RefreshList();
+                }
+                else
+                {
+                    cariKartHata = "Kayıt bulunamadı. Önceden başka bir kullanıcı tarafından silinmiş olabilir";
+                }
             }
-            RefreshList();
         }
         else
         {
-
+            using (var db = new DB())
+            {
+                db.CariKart.Add(cariKart);
+                db.SaveChanges();
+                cariKart = new CariKart();
+                cariKartHata = null;
+                RefreshList();
+            }
         }
     }
 
@@ -175,6 +213,7 @@ else
                 {
                     CariKartId = x.CariKartId,
                     Isim = x.Isim,
+                    Notlar = x.Notlar,
                     Borc = x.Hareketler.Sum(x => x.Borc),
                     Alacak = x.Hareketler.Sum(x => x.Alacak)
                 }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();

@@ -1,0 +1,35 @@
+﻿@namespace FBC.Components
+
+@if (Model != null)
+{
+    <div class=row>
+        <div class="container px-5 my-5">
+            <TextBox @bind-Data="Model.Isim" Title="Cari İsim" />
+            <TextArea @bind-Data="Model.Notlar" Title="Notlar" />
+
+            <div class="d-grid">
+                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="SaveClick">@(Model.CariKartId>0 ? "Kaydet" : "Ekle"  )</button>
+            @if (Model.CariKartId>0) {
+                <button class="btn btn-secondary btn-lg mt-1" id="submitButton" @onclick="CancelClick">Vazgeç</button>
+
+            }
+            </div>
+        </div>
+    </div>
+} else
+{
+    <pre>Model Was Here :)</pre>
+}
+
+@code {
+
+    [Parameter]
+    public CariKart Model { get; set; }
+    [Parameter]
+    public EventCallback<CariKart> ModelChanged { get; set; }
+    [Parameter]
+    public EventCallback SaveClick { get; set; }
+    [Parameter]
+    public EventCallback CancelClick { get; set; }
+
+}

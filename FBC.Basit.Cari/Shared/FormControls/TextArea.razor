@@ -11,8 +11,9 @@
                   id="@base.Id" type="text"
                   placeholder="@base.Title"
                   @oninput="HandleOnChange"
+                  @bind="@base.Data"
                   style="height: 10rem;">
-            @base.Data
+            
             </textarea>
         <label for="@base.Id">@base.Title</label>
 
