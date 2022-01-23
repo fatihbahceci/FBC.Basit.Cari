@@ -18,13 +18,16 @@ else
     <PageTitle>@model.Isim - Cari Göster</PageTitle>
 
     <h1>@model.Isim</h1>
-    if (!string.IsNullOrEmpty(model.Notlar)) {
-        <h2>Notlar:</h2>
-        <pre>@model.Notlar</pre>
+    if (!string.IsNullOrEmpty(model.Notlar))
+    {
+        <div class="d-print-none">
+            <h2>Notlar:</h2>
+            <pre>@model.Notlar</pre>
+        </div>
     }
     <id id="cariekle" />
     <AuthorizeView Roles="CanEditData">
-        <div class="container px-5 my-5">
+        <div class="container px-5 my-5 d-print-none">
             <div class="row">
                 <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
                 <DatePicker @bind-Data="hareket.VadeTarihi" FormPanelExtraClass="col" Title="VadeTarihi" />
@@ -65,7 +68,7 @@ else
                     <th>Alacak</th>
                     <th>VadeTarihi</th>
                     <AuthorizeView Roles="CanEditData">
-                        <th>İşlemler</th>
+                        <th class="d-print-none">İşlemler</th>
                     </AuthorizeView>
                 </tr>
             </thead>
@@ -80,7 +83,7 @@ else
                         <td>@item.Alacak</td>
                         <td>@item.VadeTarihi</td>
                         <AuthorizeView Roles="CanEditData">
-                            <td>
+                            <td class="d-print-none">
                                 <button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button>
                                 <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariHareketId)">Sil</a>
 
@@ -90,7 +93,7 @@ else
                 }
             </tbody>
         </table>
-        <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+        <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" ExtraClass="d-print-none"/>
 
         <AuthorizeView Roles="CanEditData">
             <ModalForm @ref="silDlg" Title="Silme işlemini onayla">

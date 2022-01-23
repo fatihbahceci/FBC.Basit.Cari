@@ -1,5 +1,5 @@
 ﻿@namespace FBC.Components
- <div class="container px-5 my-5">
+ <div class="container px-5 my-5 @ExtraClass">
             <table class="table">
                 <tr>
                     <th>Toplam Borç</th>
@@ -26,5 +26,8 @@
     public decimal ToplamAlacak { get; set; }
     [Parameter]
     public EventCallback<decimal> ToplamAlacakChanged { get; set; }
+
+    [Parameter]
+    public string ExtraClass { get; set; } = "";
 
 }
