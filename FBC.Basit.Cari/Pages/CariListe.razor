@@ -131,6 +131,7 @@ else
         {
             using (var db = new DB())
             {
+                //TODO Kullanıcı ile ilişkilendirilmişse FOREIGN KEY hatası verecektir. 
                 var har = db.CariHareket.Where(x => x.CariKartId == silinecekId);
                 db.CariHareket.RemoveRange(har);
                 var kart = db.CariKart.Where(x => x.CariKartId == silinecekId);
