@@ -12,7 +12,7 @@ FBC.Basit.Cari.DBModels.DB.MigrateDB();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<AuthenticationStateProvider, SessionedAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, FBCSessionedAuthenticationStateProvider>();
 var app = builder.Build();
 
 //app.UseForwardedHeaders(new ForwardedHeadersOptions

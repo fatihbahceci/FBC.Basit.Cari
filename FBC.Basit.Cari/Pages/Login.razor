@@ -39,7 +39,7 @@
         {
             trying = true;
             InvokeAsync(() => StateHasChanged());
-            if ((mgr as SessionedAuthenticationStateProvider).Login(userName, password))
+            if ((mgr as FBCSessionedAuthenticationStateProvider).Login(userName, password))
             {
                 //True parametresi sırf sayfayı refresh etmesi için.
                 //TODO Şu an blazor'un kurduğu yapının içinden geçtik. SignalR ağlıyor, webscocket... o da ağlıyordu. 

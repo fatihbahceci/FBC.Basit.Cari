@@ -3,146 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.JSInterop;
-using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
 namespace FBC.Basit.Cari.Auth
 {
-
-    internal class SessionManager
-    {
-        private static readonly ConcurrentDictionary<string, SessionHolder> sessions = new ConcurrentDictionary<string, SessionHolder>();
-
-        internal SessionHolder GetOrCreateSessionHolder(HttpContext? context)
-        {
-            string? sessionId = SessionHolder.GenerateSessionIdFromContext(context);
-            if (!string.IsNullOrEmpty(sessionId))
-            {
-                if (!sessions.ContainsKey(sessionId))
-                {
-                    var sessionHolder = new SessionHolder(sessionId);
-                    sessions[sessionId] = sessionHolder;
-                    return sessionHolder;
-                }
-                else
-                {
-                    if (sessions.TryGetValue(sessionId, out SessionHolder? sessionHolder))
-                    {
-                        if (sessionHolder != null)
-                        {
-                            return sessionHolder;
-                        }
-                    }
-                }
-            }
-            //throw new InvalidOperationException($"SESSION_NOT_FOUND_OR_CREATED ({sessionId})");
-            return null;
-        }
-    }
-
-
-
-    internal class SessionHolder : IDisposable
-    {
-        //private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
-
-        public string? SessionId { get; }
-        public DateTime Created { get; }
-        public DateTime LastActionDate { get; private set; }
-        public event EventHandler<SysUser?> OnSessionStateChanged;
-        public SysUser? User { get; private set; }
-
-        private void UpdateSessionState()
-        {
-            OnSessionStateChanged?.Invoke(this, User);
-        }
-
-        public void setUser(SysUser user)
-        {
-            User = user;
-            UpdateSessionState();
-        }
-        public void HadAction() => LastActionDate = DateTime.Now;
-
-        public static string? GenerateSessionIdFromContext(HttpContext? context)
-        {
-            string? id = null;
-            if (context != null && context.Request != null && context.Request.Cookies != null && context.Request.Cookies.Any())
-            {
-                var c = context.Request.Cookies;
-                if (c.TryGetValue("fbc-bw-id", out string? fbcid))
-                {
-                    if (!string.IsNullOrEmpty(fbcid))
-                    {
-
-                        id = fbcid;
-
-                        //add ip addr too when only cookie is working
-                        try
-                        {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                            String ip = context.Connection.RemoteIpAddress.ToString();
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                            if (!string.IsNullOrEmpty(ip))
-                            {
-                                id += ip;
-                            }
-                            //Console.WriteLine("ip:" + ip);
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"FBC WARNING: TryGetValue is failed");
-
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"FBC WARNING: fbcid is null or empty");
-                }
-            }
-            else
-            {
-                if (context == null)
-                {
-                    Console.WriteLine($"FBC WARNING: Context is null");
-                }
-                else if (context.Request == null)
-                {
-                    Console.WriteLine($"FBC WARNING: Request is null");
-                }
-                else if (context.Request.Cookies == null)
-                {
-                    Console.WriteLine($"FBC WARNING: Cookies is null");
-                }
-                else if (!context.Request.Cookies.Any())
-                {
-                    Console.WriteLine($"FBC WARNING:Cookies is empty");
-                }
-
-            }
-
-            return id;
-        }
-
-        public void Dispose()
-        {
-            this.User = null;
-            UpdateSessionState();
-        }
-
-        public SessionHolder(string sessionId)
-        {
-            Created = LastActionDate = DateTime.Now;
-            this.SessionId = sessionId;
-        }
-    }
 
 
     /// <summary>
@@ -153,13 +19,13 @@ namespace FBC.Basit.Cari.Auth
     /// https://docs.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-6.0#session-state
     /// https://docs.microsoft.com/en-us/aspnet/core/blazor/state-management?view=aspnetcore-6.0&pivots=server#where-to-persist-state
     /// </summary>
-    public class SessionedAuthenticationStateProvider : AuthenticationStateProvider
+    public class FBCSessionedAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private static SessionManager mgr;
+        private static FBCSessionManager mgr;
 
         #region just for test something
         private static int providerIdcounter = 0;
-        private SessionHolder sessionHolder;
+        private FBCSessionHolder sessionHolder;
 
         public int Id { get; private set; }
         private void genId()
@@ -168,11 +34,11 @@ namespace FBC.Basit.Cari.Auth
             this.Id = providerIdcounter;
         }
         #endregion
-        static SessionedAuthenticationStateProvider()
+        static FBCSessionedAuthenticationStateProvider()
         {
-            mgr = new SessionManager();
+            mgr = new FBCSessionManager();
         }
-        public SessionedAuthenticationStateProvider(IHttpContextAccessor context)
+        public FBCSessionedAuthenticationStateProvider(IHttpContextAccessor context)
         {
             genId();
 #pragma warning disable CS8601 // Possible null reference assignment.
