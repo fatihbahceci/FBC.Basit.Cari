@@ -92,7 +92,7 @@ namespace FBC.Basit.Cari.Auth
                             {
                                 id += "-" + ip;
                             }
-                            //Console.WriteLine("ip:" + ip);
+                            
                         }
                         catch
                         {

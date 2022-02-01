@@ -35,6 +35,10 @@ namespace FBC.Basit.Cari.Auth
 
         public override Task OnConnectionDownAsync(Circuit circuit, CancellationToken cancellationToken)
         {
+            //Aslında OnCircuitClosedAsync yeterli olmalıydı -belki yeterlidir de- ama nedense 
+            //bazen circuit koptuğu halde burada algılanmıyor.
+            // TODO Hatta bunu ekledikten sonra bile algılanmıyor. 
+            FBCSessionManager.CirciuitClosed(circuit.Id);
             return base.OnConnectionDownAsync(circuit, cancellationToken);
         }
 

@@ -6,6 +6,7 @@ namespace FBC.Basit.Cari.Auth
     {
         public const int CIRCUITLESS_USER_DATA_TIMEOUT_SECONDS = 60;
         public const int CIRCUITLESS_GARBAGE_COLLECTOR_TIMEOUT_SECONDS = 120;
+        public const int GARBAGE_COLLECTOR_ANYWAY_TIMEOUT_SECONDS = 30 * 60;
         private static readonly ConcurrentDictionary<string, FBCSessionHolder> sessions;
         private static System.Timers.Timer gc_timer;
         static FBCSessionManager()
@@ -18,9 +19,16 @@ namespace FBC.Basit.Cari.Auth
                 {
                     if (session != null)
                     {
-                        if (!session.HasCircuits && (DateTime.Now - session.LastActionDate).TotalSeconds > CIRCUITLESS_GARBAGE_COLLECTOR_TIMEOUT_SECONDS)
+                        var totalSeconds = (DateTime.Now - session.LastActionDate).TotalSeconds;
+                        if (
+                        //End session if it has'nt circuits in given time
+                        (!session.HasCircuits && totalSeconds > CIRCUITLESS_GARBAGE_COLLECTOR_TIMEOUT_SECONDS) ||
+                        //End session even if it have circuits
+                        totalSeconds > GARBAGE_COLLECTOR_ANYWAY_TIMEOUT_SECONDS)
                         {
-                            sessions.TryRemove(session.SessionId, out var hede);
+                            string id = session.SessionId ?? "";
+                            sessions.TryRemove(id, out var hede);
+                            try { session.Dispose(); } catch { }
                         }
                     }
                 });

@@ -17,10 +17,11 @@ builder.Services.AddScoped<AuthenticationStateProvider, FBCSessionedAuthenticati
 builder.Services.AddSingleton<CircuitHandler, FBCCircuitHandlerService>();
 var app = builder.Build();
 
-//app.UseForwardedHeaders(new ForwardedHeadersOptions
-//{
-//    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-//});
+//https://stackoverflow.com/questions/63038712/httpcontext-connection-remoteipaddress-returns-127-0-0-1-on-the-server
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
