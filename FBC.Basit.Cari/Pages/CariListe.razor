@@ -223,8 +223,13 @@ else
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnAfterRender(bool firstRender)
     {
         RefreshList();
+        //OnInitializedAsync de olurdu önemli değil. (Login sonrası index, refresh edinceye kadar boş geliyor #6) ile alakası yok.
     }
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    RefreshList();
+    //}
 }

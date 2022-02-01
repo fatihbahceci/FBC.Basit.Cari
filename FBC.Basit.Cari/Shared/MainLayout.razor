@@ -53,11 +53,8 @@
     private bool showVersion = false;
     [CascadingParameter]
     private Task<AuthenticationState> aState { get; set; }
-    //protected override async Task OnAfterRenderAsync(bool firstRender)
-    //{
 
-    //}
-    protected override async Task OnInitializedAsync()
+    private async Task CheckAuth()
     {
         var authState = await aState;
         var user = authState.User;
@@ -85,34 +82,17 @@
             //Boş kayıt dön (tüm idler sıfırdan büyük olacağı için)
             userCariKartId = -1;
         }
-        //InvokeAsync(() => StateHasChanged());
         StateHasChanged();
+
     }
 
-
-
-
-    //private string _authMessage;
-    //private string _surnameMessage;
-    //private IEnumerable<Claim> _claims = Enumerable.Empty<Claim>();
-
-    //private async Task GetClaimsPrincipalData()
+    //protected override async Task OnInitializedAsync()
     //{
-    //    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    //    var user = authState.User;
-
-    //    if (user.Identity.IsAuthenticated)
-    //    {
-    //        _authMessage = $"{user.Identity.Name} is authenticated.";
-    //        _claims = user.Claims;
-    //        _surnameMessage =
-    //            $"Surname: {user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value}";
-    //    }
-    //    else
-    //    {
-    //        _authMessage = "The user is NOT authenticated.";
-    //    }
     //}
 
-
+    protected override void OnAfterRender(bool firstRender)
+    {
+        InvokeAsync(() => CheckAuth());
+        //base.OnAfterRender(firstRender);
+    }
 }
