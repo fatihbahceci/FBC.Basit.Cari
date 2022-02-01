@@ -9,8 +9,6 @@ using System.Text.Json;
 
 namespace FBC.Basit.Cari.Auth
 {
-
-
     /// <summary>
     /// https://docs.microsoft.com/en-us/aspnet/core/blazor/security/?view=aspnetcore-6.0#authenticationstateprovider-service
     /// https://docs.microsoft.com/en-us/aspnet/core/blazor/security/?view=aspnetcore-6.0#implement-a-custom-authenticationstateprovider
@@ -21,38 +19,14 @@ namespace FBC.Basit.Cari.Auth
     /// </summary>
     public class FBCSessionedAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private static FBCSessionManager mgr;
-
-        #region just for test something
-        private static int providerIdcounter = 0;
         private FBCSessionHolder sessionHolder;
-
-        public int Id { get; private set; }
-        private void genId()
-        {
-            if (providerIdcounter < int.MaxValue) providerIdcounter++; else providerIdcounter = 1;
-            this.Id = providerIdcounter;
-        }
-        #endregion
-        static FBCSessionedAuthenticationStateProvider()
-        {
-            mgr = new FBCSessionManager();
-        }
         public FBCSessionedAuthenticationStateProvider(IHttpContextAccessor context)
         {
-            genId();
-#pragma warning disable CS8601 // Possible null reference assignment.
-
-#pragma warning restore CS8601 // Possible null reference assignment.
-            this.sessionHolder = mgr.GetOrCreateSessionHolder(context.HttpContext);
+            this.sessionHolder = FBCSessionManager.GetOrCreateSessionHolder(context.HttpContext);
             if (sessionHolder != null)
             {
-                sessionHolder.OnSessionStateChanged += (s, e) =>
-                {
-                    UpdateState();
-                };
+                sessionHolder.OnSessionStateChanged += (s, e) => { UpdateState(); };
             }
-
         }
 
         public void UpdateState()
@@ -62,14 +36,12 @@ namespace FBC.Basit.Cari.Auth
             // local storage, then add it back as a parameter to the AuthenticateUser
             // and place here the logic to save it in the local storage
             // After which call NotifyAuthenticationStateChanged method like this.
-
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var lUser = sessionHolder?.User;
+            var lUser = sessionHolder?.getUser();
             if (lUser != null)
             {
                 List<Claim> claims = new List<Claim>();
@@ -135,31 +107,8 @@ namespace FBC.Basit.Cari.Auth
             }
             //UpdateState();
         }
-
-        public static string getSummary()
-        {
-            StringBuilder sb = new StringBuilder("Summary");
-            //foreach (var key in keys)
-            //{
-            //    sb.AppendLine($"key: {key}");
-            //    if (_users.TryGetValue(key, out var userDataHolder))
-            //    {
-            //        if (userDataHolder != null)
-            //        {
-            //            foreach (var item in userDataHolder.Providers)
-            //            {
-            //                sb.AppendLine($"    providerId: {item.Id}");
-            //            }
-            //        }
-            //    }
-
-            //}
-            return sb.ToString();
-        }
-
     }
 }
-
 
 //public static class TestMW
 //{
@@ -202,49 +151,3 @@ namespace FBC.Basit.Cari.Auth
 //}
 //}
 
-
-//private const long IDLE_TIME_LIMIT_SECONDS = 60 * 5;
-//private const bool ENABLE_SESSION_IDLE_TIME_LIMIT = true;
-//private static DateTime lastPerodicalIdleChecked = DateTime.Now;
-
-//private static void PerodicalIdleCheck()
-//{
-//    if ((DateTime.Now - lastPerodicalIdleChecked).TotalSeconds > 60 * 3)
-//    {
-//        var dead = _users.Where(x =>
-
-//         x.Value == null
-//         || (x.Value != null && (DateTime.Now - x.Value.LastActionDate).TotalSeconds > IDLE_TIME_LIMIT_SECONDS)
-//        ).Select(x => x.Key).ToList();
-
-//        if (dead.Any())
-//        {
-//            dead.ForEach(x => _users.TryRemove(x, out UserDataHolder? mahmutHoca));
-//        }
-//    }
-//}
-//private UserDataHolder? getHolder()
-//{
-//    if (!string.IsNullOrEmpty(aiData.SessionId) && _users.TryGetValue(aiData.SessionId, out var userDataHolder))
-//    {
-//        return userDataHolder;
-//    }
-//    return null;
-//}
-//public SysUser? GetLoggedInUser()
-//{
-//    var userDataHolder = getHolder();
-//    if (userDataHolder != null)
-//    {
-//        if ((DateTime.Now - userDataHolder.LastActionDate).TotalSeconds < IDLE_TIME_LIMIT_SECONDS && userDataHolder.User != null)
-//        {
-//            userDataHolder.HadAction();
-//            return userDataHolder.User;
-//        }
-//        else
-//        {
-//            _users.TryRemove(aiData.SessionId, out userDataHolder);
-//        }
-//    }
-//    return null;
-//}

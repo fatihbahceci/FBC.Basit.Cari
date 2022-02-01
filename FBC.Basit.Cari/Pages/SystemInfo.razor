@@ -1,0 +1,63 @@
+﻿@attribute [Authorize(Roles = "Admin")];
+@using FBC.Basit.Cari.Auth
+@page "/sys"
+
+<h3>SystemInfo</h3>
+<a href="javascript: void(0);" @onclick="updateSummary">Yenile</a>
+@*@if (sessionSummary != null)
+{
+    <table class="table">
+        <tbody>
+            @foreach (var session in sessionSummary)
+            {
+                <tr>
+                    <th colspan=2>Session: @session.Key</th>
+                </tr>
+                @foreach (var sp in session.Value)
+                {
+                    <tr>
+                        <td>@sp.Key</td>
+                        <td>@sp.Value</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}*@
+@if (ssNode != null)
+{
+    Action<IReadOnlyCollection<FBCTreeNode<KeyValuePair<string, string>>>> prn = null;
+
+    prn = (nodes) =>
+    {
+        <ul>
+            @foreach (var item in nodes)
+            {
+                <li>
+                    @item.Data.Key: @item.Data.Value
+                    @if (item.Childs.Any())
+                    {
+                        prn(item.Childs);
+                    }
+                </li>
+            }
+        </ul>
+    };
+    prn(ssNode.Childs);
+}
+
+
+@code {
+    //private Dictionary<string, Dictionary<string, string?>>? sessionSummary;
+    private FBCTreeNode<KeyValuePair<string, string>> ssNode;
+    private void updateSummary()
+    {
+        //sessionSummary = FBCSessionManager.GetSummary();
+        ssNode = FBCSessionManager.GetSummaryAsNode();
+        StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        updateSummary();
+    }
+}

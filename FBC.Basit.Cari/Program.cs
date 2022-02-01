@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using FBC.Basit.Cari.Auth;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 var builder = WebApplication.CreateBuilder(args);
 FBC.Basit.Cari.DBModels.DB.MigrateDB();
@@ -13,6 +14,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthenticationStateProvider, FBCSessionedAuthenticationStateProvider>();
+builder.Services.AddSingleton<CircuitHandler, FBCCircuitHandlerService>();
 var app = builder.Build();
 
 //app.UseForwardedHeaders(new ForwardedHeadersOptions

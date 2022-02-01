@@ -1,28 +1,75 @@
 ﻿using FBC.Basit.Cari.DBModels;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace FBC.Basit.Cari.Auth
 {
     internal class FBCSessionHolder : IDisposable
     {
         //private const string COOKIE_ERROR = "Bu uygulama çerezleri (cookies) kullanmaktadır. Eğer gizli (private) modda iseniz lütfen normal moda dönünüz, eğer çerezler kapalı ise lütfen açınız. Veya sayfayı yenileyerek tekrar deneyiniz.";
+        private ConcurrentDictionary<string, object?> active_circuits;
+
+        private bool IsCircuitlessTimeout()
+        {
+            return
+                !HasCircuits &&
+                ((DateTime.Now - LastActionDate).TotalSeconds > FBCSessionManager.CIRCUITLESS_USER_DATA_TIMEOUT_SECONDS);
+        }
+
+        private void CheckCircuitlessTimeout()
+        {
+            if (IsCircuitlessTimeout())
+            {
+                _user = null;
+                UpdateSessionState();
+            }
+        }
+        public bool HasCircuits => active_circuits.Any();
+
+        public void AddCircuit(string circuitId)
+        {
+            CheckCircuitlessTimeout();
+            active_circuits[circuitId] = null;
+            LastActionDate = DateTime.Now;//Don't use HadAction() method
+        }
+
+        public void RemoveCircuit(string circuitId)
+        {
+            if (active_circuits.ContainsKey(circuitId))
+            {
+                active_circuits.TryRemove(circuitId, out object? o);
+                //Give a time after circuit closed
+                LastActionDate = DateTime.Now;//Don't use HadAction() method
+            }
+            //CheckIdleTimeout(); //This became unnecessary because of updating the LastActionDate;
+        }
 
         public string? SessionId { get; }
         public DateTime Created { get; }
         public DateTime LastActionDate { get; private set; }
         public event EventHandler<SysUser?> OnSessionStateChanged;
-        public SysUser? User { get; private set; }
+        private SysUser? _user;
+        public SysUser? getUser()
+        {
+            return !IsCircuitlessTimeout() ? this._user : null;
+        }
 
         private void UpdateSessionState()
         {
-            OnSessionStateChanged?.Invoke(this, User);
+            OnSessionStateChanged?.Invoke(this, _user);
         }
 
         public void setUser(SysUser user)
         {
-            User = user;
+            _user = user;
             UpdateSessionState();
         }
-        public void HadAction() => LastActionDate = DateTime.Now;
+        public void HadAction()
+        {
+            //Check last action before 
+            CheckCircuitlessTimeout();
+            LastActionDate = DateTime.Now;
+        }
 
         public static string? GenerateSessionIdFromContext(HttpContext? context)
         {
@@ -40,12 +87,10 @@ namespace FBC.Basit.Cari.Auth
                         //add ip addr too when only cookie is working
                         try
                         {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                            String ip = context.Connection.RemoteIpAddress.ToString();
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                            string? ip = context.Connection?.RemoteIpAddress?.ToString();
                             if (!string.IsNullOrEmpty(ip))
                             {
-                                id += ip;
+                                id += "-" + ip;
                             }
                             //Console.WriteLine("ip:" + ip);
                         }
@@ -83,111 +128,58 @@ namespace FBC.Basit.Cari.Auth
                 {
                     Console.WriteLine($"FBC WARNING:Cookies is empty");
                 }
-
             }
-
             return id;
         }
 
         public void Dispose()
         {
-            this.User = null;
+            this._user = null;
             UpdateSessionState();
+        }
+
+        internal KeyValuePair<string, Dictionary<string, string?>> GetSummary()
+        {
+            KeyValuePair<string, Dictionary<string, string?>> r = new KeyValuePair<string, Dictionary<string, string?>>(this.SessionId ?? "NO_SESSION_ID", new Dictionary<string, string?>());
+            r.Value["Session Id"] = this.SessionId;
+            r.Value["Created"] = Created + "";
+            r.Value["LastActionDate"] = LastActionDate + "";
+            r.Value["UserName"] = _user == null ? null : _user.SysUserName;
+            int idx = 0;
+            active_circuits.Keys.ToList().ForEach(x =>
+            {
+                r.Value["Circuit " + idx++] = x;
+            });
+
+            r.Value[""] = "";
+
+            return r;
+        }
+        private KeyValuePair<string, string> kv(string key, string? value)
+        {
+            return KeyValuePair.Create(key, value);
+        }
+        internal FBCTreeNode<KeyValuePair<string, string>> GetSummaryAsNode()
+        {
+            FBCTreeNode<KeyValuePair<string, string>> r =
+                new FBCTreeNode<KeyValuePair<string, string>>(kv("SessionId", this.SessionId ?? "NO_SESSION_ID"));
+            r.CreateChild(kv("Created", Created + ""));
+            r.CreateChild(kv("LastActionDate", LastActionDate + ""));
+            r.CreateChild(kv("UserName", _user == null ? null : _user.SysUserName));
+            var cr = r.CreateChild(kv("Circuits", null));
+            int idx = 0;
+            active_circuits.Keys.ToList().ForEach(x =>
+            {
+                cr.CreateChild(kv("Circuit " + idx++, x));
+            });
+            return r;
         }
 
         public FBCSessionHolder(string sessionId)
         {
+            active_circuits = new ConcurrentDictionary<string, object?>();
             Created = LastActionDate = DateTime.Now;
             this.SessionId = sessionId;
         }
     }
 }
-
-
-//public static class TestMW
-//{
-//    public static void UseFBC(this IApplicationBuilder app)
-//    {
-//        app.Use(async (context, next) =>
-//        {
-//            var cultureQuery = context.Request.Query["culture"];
-//            // Call the next delegate/middleware in the pipeline
-//            await next();
-//        });
-//    }
-//}
-
-//public class HttpContextItemsMiddleware
-//{
-//    private readonly RequestDelegate _next;
-//    public static readonly object HttpContextItemsMiddlewareKey = new();
-
-//    public HttpContextItemsMiddleware(RequestDelegate next)
-//    {
-//        _next = next;
-//    }
-
-//    public async Task Invoke(HttpContext httpContext)
-//    {
-//        httpContext.Items[HttpContextItemsMiddlewareKey] = "K-9";
-
-//        await _next(httpContext);
-//    }
-//}
-
-//public static class HttpContextItemsMiddlewareExtensions
-//{
-//    public static IApplicationBuilder
-//        UseHttpContextItemsMiddleware(this IApplicationBuilder app)
-//    {
-//        return app.UseMiddleware<HttpContextItemsMiddleware>();
-//    }
-//}
-//}
-
-
-//private const long IDLE_TIME_LIMIT_SECONDS = 60 * 5;
-//private const bool ENABLE_SESSION_IDLE_TIME_LIMIT = true;
-//private static DateTime lastPerodicalIdleChecked = DateTime.Now;
-
-//private static void PerodicalIdleCheck()
-//{
-//    if ((DateTime.Now - lastPerodicalIdleChecked).TotalSeconds > 60 * 3)
-//    {
-//        var dead = _users.Where(x =>
-
-//         x.Value == null
-//         || (x.Value != null && (DateTime.Now - x.Value.LastActionDate).TotalSeconds > IDLE_TIME_LIMIT_SECONDS)
-//        ).Select(x => x.Key).ToList();
-
-//        if (dead.Any())
-//        {
-//            dead.ForEach(x => _users.TryRemove(x, out UserDataHolder? mahmutHoca));
-//        }
-//    }
-//}
-//private UserDataHolder? getHolder()
-//{
-//    if (!string.IsNullOrEmpty(aiData.SessionId) && _users.TryGetValue(aiData.SessionId, out var userDataHolder))
-//    {
-//        return userDataHolder;
-//    }
-//    return null;
-//}
-//public SysUser? GetLoggedInUser()
-//{
-//    var userDataHolder = getHolder();
-//    if (userDataHolder != null)
-//    {
-//        if ((DateTime.Now - userDataHolder.LastActionDate).TotalSeconds < IDLE_TIME_LIMIT_SECONDS && userDataHolder.User != null)
-//        {
-//            userDataHolder.HadAction();
-//            return userDataHolder.User;
-//        }
-//        else
-//        {
-//            _users.TryRemove(aiData.SessionId, out userDataHolder);
-//        }
-//    }
-//    return null;
-//}
