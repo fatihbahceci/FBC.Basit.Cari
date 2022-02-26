@@ -86,9 +86,10 @@
 
     }
 
-    //protected override async Task OnInitializedAsync()
-    //{
-    //}
+    protected override async Task OnInitializedAsync()
+    {
+        InvokeAsync(() => CheckAuth()); //It's important because of sceurity reasons -FBC https://github.com/fatihbahceci/FBC.Basit.Cari/issues/7
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {

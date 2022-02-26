@@ -4,8 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyVersion>0.0.2.6</AssemblyVersion>
-    <FileVersion>0.0.2.6</FileVersion>
+    <AssemblyVersion>0.0.2.7</AssemblyVersion>
+    <FileVersion>0.0.2.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +46,8 @@ yyyy.MM.dd-Version-Author
 ******************************
 FBC.Basit.Cari
 ******************************
+2022.02.01-0.0.2.7-[FatihB] 
+    [BG] İlişkili hesap dışındaki hesaba erişim var #7
 2022.02.01-0.0.2.6-[FatihB] 
     [BG] Login sonrası index, refresh edinceye kadar boş geliyor #6
 2022.02.01-0.0.2.5-[FatihB] 
