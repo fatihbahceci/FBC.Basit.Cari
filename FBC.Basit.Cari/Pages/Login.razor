@@ -7,8 +7,8 @@
 <div class=row>
 
     <div class="container px-5 my-5">
-        <TextBox @bind-Data="userName" Title="Kullanıcı Adı" />
-        <TextBox @bind-Data="password" Title="Parola" IsPassword="true" />
+        <TextBox @bind-Data="userName" Title="Kullanıcı Adı" KeyPressed="InputKeyPressed" />
+        <TextBox @bind-Data="password" Title="Parola" IsPassword="true" KeyPressed="InputKeyPressed" />
         @if (!trying)
         {
             <div class="d-grid">
@@ -30,7 +30,13 @@
     string password;
     string loginMessage;
     bool trying = false;
-
+    void InputKeyPressed(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            TryLogin();
+        }
+    }
 
     void TryLogin()
     {
