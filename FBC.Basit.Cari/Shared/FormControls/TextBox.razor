@@ -10,7 +10,7 @@
                value="@base.Data" @oninput="OnInputChange"
                id="@base.Id" placeholder="@((MarkupString)base.Title)"
                class="form-control"
-               @onkeypress="InputKeyress" />
+               @onkeypress="InputKeypress" />
         <label for="@base.Id">@((MarkupString)base.Title)</label>
     </Content>
 </FormControlPanel>
@@ -20,7 +20,7 @@
     [Parameter]
     public EventCallback<KeyboardEventArgs> KeyPressed { get; set; }
 
-    public void InputKeyress(KeyboardEventArgs e)
+    public void InputKeypress(KeyboardEventArgs e)
     {
         KeyPressed.InvokeAsync(e);
         //if (e.Code == "Enter" || e.Code == "NumpadEnter")
