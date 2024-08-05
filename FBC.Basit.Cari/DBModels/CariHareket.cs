@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-/// <summary>
-/// https://docs.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli
-/// </summary>
+
 namespace FBC.Basit.Cari.DBModels
 {
     public class CariHareket
@@ -20,6 +18,9 @@ namespace FBC.Basit.Cari.DBModels
         public int CariKartId { get; set; }
         public CariKart CariKart { get; set; }
 
+        [ForeignKey(nameof(DovizKuru))]
+        public int? DovizKuruId { get; set; }
+        public DovizKuru? DovizKuru { get; set; }
 
         public void Fill(CariHareket h)
         {
@@ -31,6 +32,7 @@ namespace FBC.Basit.Cari.DBModels
             Borc = h.Borc;
             Alacak = h.Alacak;
             VadeTarihi = h.VadeTarihi;
+            DovizKuruId = h.DovizKuruId;
         }
     }
 }

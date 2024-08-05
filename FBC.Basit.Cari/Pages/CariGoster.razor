@@ -5,26 +5,46 @@
 @inject IJSRuntime JS
 
 
-@if (model == null)
+@if (cariKart == null)
 {
     <PageTitle>Cari Göster - Kayıt Bulunamadı!</PageTitle>
     <h1>Kayıt Bulunamadı!</h1>
 }
 else
 {
-    var toplamBorc = model.Hareketler.Sum(x => x.Borc);
-    var toplamAlacak = model.Hareketler.Sum(x => x.Alacak);
+    var toplamBorc = hareketler.Sum(x => x.BorcDovizSatis);
+    var toplamAlacak = hareketler.Sum(x => x.AlacakDovizSatis);
 
-    <PageTitle>@model.Isim - Cari Göster</PageTitle>
-
-    <h1>@model.Isim</h1>
-    if (!string.IsNullOrEmpty(model.Notlar))
+    <PageTitle>@cariKart.Isim - Cari Göster</PageTitle>
+    <h1>@cariKart.Isim</h1>
+    if (!string.IsNullOrEmpty(cariKart.Notlar))
     {
-        <div class="d-print-none">
-            <h2>Notlar:</h2>
-            <pre>@model.Notlar</pre>
-        </div>
+       <div class="d-print-none">
+          <h2>Notlar:</h2>
+          <pre>@cariKart.Notlar</pre>
+       </div>
     }
+<!-- 
+       public int CariHareketId { get; set; }
+        public DateTime? Tarih { get; set; }
+        public string? Aciklama { get; set; }
+        public string? EvrakNo { get; set; }
+        public decimal Borc { get; set; }
+        public decimal Alacak { get; set; }
+        public DateTime? VadeTarihi { get; set; }
+        public int CariKartId { get; set; }
+        public int? DovizKuruId { get; set; }
+        public decimal DovizKuruAlis { get; set; }
+        public decimal DovizKuruSatis { get; set; }
+        public string DovizCinsi { get; set; }
+        public string DovizAdi { get; set; }
+        public DateTime DovizGuncellemeTarihi { get; set; }
+        public decimal BorcDovizAlis { get => Borc * DovizKuruAlis; }
+        public decimal BorcDovizSatis { get => Borc * DovizKuruSatis; }
+        public decimal AlacakDovizAlis { get => Alacak * DovizKuruAlis; }
+        public decimal AlacakDovizSatis { get => Alacak * DovizKuruSatis; }
+
+-->
     <id id="cariekle" />
     <AuthorizeView Roles="CanEditData">
         <div class="container px-5 my-5 d-print-none">
@@ -38,12 +58,16 @@ else
                 <TextBox @bind-Data="hareket.Alacak" FormPanelExtraClass="col" Title="Alacak" />
             </div>
 
+            <div>
+                  <DovizSecCombo @bind-Data="hareket.DovizKuruId" Collection="dovizKurlari" Title="Döviz Kuru" />
+            </div>
+
             <div class="d-grid">
-                @if (hareket.CariHareketId > 0)
-                {
-                    <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
-                }
-                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId>0 ?"Kaydet":"Ekle")</button>
+            @if (hareket.CariHareketId > 0)
+            {
+                <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
+            }
+            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId > 0 ? "Kaydet" : "Ekle")</button>
             </div>
             @if (!string.IsNullOrEmpty(hata))
             {
@@ -56,7 +80,7 @@ else
     <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
 
-    @if (model.Hareketler != null)
+    @if (hareketler != null)
     {
         <table class="table">
             <thead>
@@ -73,7 +97,7 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in model.Hareketler)
+                @foreach (var item in hareketler)
                 {
                     <tr>
                         <td>@item.CariHareketId</td>
@@ -83,13 +107,32 @@ else
                         <td>@item.Alacak</td>
                         <td>@item.VadeTarihi</td>
                         <AuthorizeView Roles="CanEditData">
-                            <td class="d-print-none">
+                            <td class="d-print-none"  rowspan="@(item.DovizKuruId != null ? "3" : "")">
                                 <button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button>
                                 <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariHareketId)">Sil</a>
-
                             </td>
                         </AuthorizeView>
                     </tr>
+                    if (item.DovizKuruId!= null)
+                    {
+                        <tr>
+                            <td>Doviz</td>
+                            <td>Alış/Satış</td>
+                            <td>BorcDovizAlis</td>
+                            <td>BorcDovizSatis</td>
+                            <td>AlacakDovizAlis</td>
+                            <td>AlacakDovizSatis</td>
+                        </tr>
+
+                        <tr>
+                            <td>@item.DovizAdi (@item.DovizCinsi)</td>
+                            <td>@item.DovizKuruAlis/@item.DovizKuruSatis</td>
+                            <td>@item.BorcDovizAlis</td>
+                            <td>@item.BorcDovizSatis</td>
+                            <td>@item.AlacakDovizAlis</td>
+                            <td>@item.AlacakDovizSatis</td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -98,9 +141,9 @@ else
         <AuthorizeView Roles="CanEditData">
             <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
                 <Body>
-                    @{
-                        var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-                    }
+                @{
+                    var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
+                 }
                     <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
                 </Body>
                 <Footer>
@@ -118,7 +161,9 @@ else
 @code {
     [Parameter]
     public int Id { get; set; }
-    private CariKart? model;
+    private CariKart? cariKart;
+    private List<CariHareketWrapper>? hareketler;
+    private List<DovizKuru>? dovizKurlari;
     private CariHareket hareket = new CariHareket();
     private string? hata;
 
@@ -158,7 +203,7 @@ else
 
     private void Duzenle(int id)
     {
-        hareket = model.Hareketler.First(x => x.CariHareketId == id);
+        hareket = hareketler.First(x => x.CariHareketId == id).ToCariHareket();
         //https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/call-javascript-from-dotnet?view=aspnetcore-6.0
         JS.InvokeVoidAsync("jump", "cariekle");
     }
@@ -172,9 +217,9 @@ else
     private void Kaydet()
     {
         hata = null;
-        if (hareket == null || model == null)
+        if (hareket == null || cariKart == null)
         {
-            hata = $"Ri tı siya-o h:{hareket == null} m:{model == null}";
+            hata = $"Ri tı siya-o h:{hareket == null} m:{cariKart == null}";
         }
         else if (hareket.Borc <= 0 && hareket.Alacak <= 0)
         {
@@ -192,8 +237,7 @@ else
         {
             if (hareket.CariHareketId > 0)
             {
-
-                hareket.CariKartId = model.CariKartId;
+                hareket.CariKartId = cariKart.CariKartId;
                 using (var db = new DB())
                 {
                     var exists = db.CariHareket.FirstOrDefault(x => x.CariHareketId == hareket.CariHareketId);
@@ -210,11 +254,9 @@ else
             }
             else
             {
-
-                hareket.CariKartId = model.CariKartId;
+                hareket.CariKartId = cariKart.CariKartId;
                 using (var db = new DB())
                 {
-
                     db.CariHareket.Add(hareket);
                     db.SaveChanges();
                 }
@@ -231,25 +273,28 @@ else
     {
         using (var db = new DB())
         {
-            model =
+            dovizKurlari = db.DovizKuru.AsNoTracking().ToList();
+            dovizKurlari.Insert(0, new DovizKuru() { DovizKuruId = 0, DovizAdi = "TL", DovizCinsi = "TRY" });
+            cariKart =
             (
                 cariKartIdOnly != null
                     ? db.CariKart.AsNoTracking().Where(x => x.CariKartId == cariKartIdOnly)
                     : db.CariKart.AsNoTracking()
             )
-
-
-            .Include(x => x.Hareketler)
+            // .Include(x => x.Hareketler)
             .Where(x => x.CariKartId == Id)
             .FirstOrDefault();
 
-            if (model != null && model.Hareketler != null)
+            if (cariKart != null)
             {
-                model.Hareketler = model.Hareketler
-                .OrderByDescending(x => x.Tarih)
-                .ThenBy(x => x.VadeTarihi)
-                .ThenByDescending(x => x.CariHareketId)
-                .ToList();
+                hareketler = db.CariHareket
+                    .Where(x => x.CariKartId == cariKart.CariKartId)
+                    .Include(x => x.DovizKuru)
+                    .OrderByDescending(x => x.Tarih)
+                    .ThenBy(x => x.VadeTarihi)
+                    .ThenByDescending(x => x.CariHareketId)
+                    .Select(x => new CariHareketWrapper(x))
+                    .ToList();
             }
         }
         InvokeAsync(() => StateHasChanged());

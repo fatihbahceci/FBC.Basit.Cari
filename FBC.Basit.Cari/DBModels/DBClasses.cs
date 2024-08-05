@@ -14,6 +14,8 @@ namespace FBC.Basit.Cari.DBModels
         public DbSet<CariKart> CariKart { get; set; }
         public DbSet<CariHareket> CariHareket { get; set; }
         public DbSet<SysUser> Users { get; set; }
+        public DbSet<DovizKuru> DovizKuru { get; set; }
+        public DbSet<DovizKuruHareket> DovizKuruHareket { get; set; }
 
         public string DbPath { get; }
 
@@ -46,14 +48,14 @@ namespace FBC.Basit.Cari.DBModels
 
                     //}
                     //else 
-                    
+
                     //if (db.Database.GetMigrations().Any())
 
                     //{
-                        Console.WriteLine("Begin Migrate");
+                    Console.WriteLine("Begin Migrate");
 
-                        db.Database.Migrate();
-                        Console.WriteLine("End Migrate");
+                    db.Database.Migrate();
+                    Console.WriteLine("End Migrate");
                     //} else
                     //{
                     //    Console.WriteLine("The database is already up to date.");
@@ -74,6 +76,70 @@ namespace FBC.Basit.Cari.DBModels
                         });
                         db.SaveChanges();
                     }
+                    if (!db.DovizKuru.Any())
+                    {
+                        Console.WriteLine("AddDovizKuru");
+                        var tarih = new DateTime(1982, 09, 06);
+                        var dovizler = new List<DovizKuru>
+                        {
+                            new DovizKuru { DovizCinsi = "TRY", DovizAdi = "Türk Lirası", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "USD", DovizAdi = "Amerikan Doları", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "EUR", DovizAdi = "Euro", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "GBP", DovizAdi = "İngiliz Sterlini", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "CHF", DovizAdi = "İsviçre Frangı", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "JPY", DovizAdi = "Japon Yeni", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "AUD", DovizAdi = "Avustralya Doları", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "CAD", DovizAdi = "Kanada Doları", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "DKK", DovizAdi = "Danimarka Kronu", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "NOK", DovizAdi = "Norveç Kronu", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "SEK", DovizAdi = "İsveç Kronu", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "RUB", DovizAdi = "Rus Rublesi", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+/*
+ Gram Altın
+Cumhuriyet Altını
+Tam Altın
+Yarım Altın
+Çeyrek Altın
+Reşat Altın
+22 Ayar
+18 Ayar
+14 Ayar
+Gremse Altın
+Hamit Altın
+Gümüş
+Platin
+ */
+                            new DovizKuru { DovizCinsi = "XAU", DovizAdi = "Gram Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_CUMHURIYET_ALTINI", DovizAdi = "Cumhuriyet Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_TAM_ALTIN", DovizAdi = "Tam Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_YARIM_ALTIN", DovizAdi = "Yarım Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_CEYREK_ALTIN", DovizAdi = "Çeyrek Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_RESAT_ALTINI", DovizAdi = "Reşat Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_KULPLU_RESAT_ALTINI", DovizAdi = "Kulplu Reşat Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_22_AYAR_ALTIN", DovizAdi = "22 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_18_AYAR_ALTIN", DovizAdi = "18 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_14_AYAR_ALTIN", DovizAdi = "14 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_GREMSE_ALTIN", DovizAdi = "Gremse Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_ATA_ALTIN", DovizAdi = "Ata Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_HAS_ALTIN", DovizAdi = "Has Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_HAMIT_ALTIN", DovizAdi = "Hamit Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_GUMUS", DovizAdi = "Gümüş", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "M_PLATIN", DovizAdi = "Platin", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih }
+                        };
+                        db.DovizKuru.AddRange(dovizler);
+                        db.SaveChanges();
+                        dovizler = db.DovizKuru.ToList();
+                        db.DovizKuruHareket.AddRange(dovizler.Select(x => new DovizKuruHareket
+                        {
+                            Tarih = x.GuncellemeTarihi,
+                            Alis = x.GuncelKurAlis,
+                            Satis = x.GuncelKurSatis,
+                            Kaynak = "İlk Kur",
+                            DovizKuruId = x.DovizKuruId
+                        }));
+                        db.SaveChanges();
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -92,5 +158,18 @@ namespace FBC.Basit.Cari.DBModels
         // special "local" folder for your platform.
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source={DbPath}");
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DovizKuru>()
+                .HasIndex(d => d.DovizCinsi)
+                .IsUnique();
+
+            modelBuilder.Entity<DovizKuruHareket>()
+                .HasIndex(d => new { d.Tarih, d.DovizKuruId })
+                .IsUnique();
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

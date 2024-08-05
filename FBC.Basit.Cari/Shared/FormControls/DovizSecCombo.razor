@@ -1,0 +1,26 @@
+﻿@namespace FBC.FormControls
+@using System.Linq.Expressions
+@inherits FormControlBase<int?>
+
+<FormControlPanel ExtraClass="@base.FormPanelExtraClass">
+    <Content>
+        <select class="form-select" @bind="base.Data" id="@base.Id" aria-label="@base.Title" @oninput="OnInputChange">
+            @if (Collection?.Any() == true)
+            {
+                foreach (DovizKuru item in Collection)
+                {
+                    <option value="@(item.DovizKuruId<=0? null : @item.DovizKuruId)">@item.DovizAdi (@item.DovizCinsi)</option>
+                }
+            }
+        </select>
+        <label for="@base.Id">@base.Title</label>
+    </Content>
+</FormControlPanel>
+
+@code {
+    [Parameter] public IEnumerable<DovizKuru> Collection { get; set; }
+
+
+
+
+}
