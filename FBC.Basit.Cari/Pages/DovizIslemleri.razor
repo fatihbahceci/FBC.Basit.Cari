@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore;
 @using System.Linq;
 @using FBC.Components;
+@using System.Xml
 @inject IJSRuntime JS
 <h3>DovizIslemleri</h3>
 <id id="kullaniciekle" />
@@ -22,6 +23,15 @@
             <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
         }
         <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(DovizKuru.DovizKuruId > 0 ? "Kaydet" : "Ekle")</button>
+    </div>
+@*     <div>
+        <small class="text-muted">Son güncelleme: @DovizKuru.GuncellemeTarihi</small>
+    </div> *@
+    <div class="row" >
+        <CheckBox @bind-Data="merkezBankasindanOlmayanlaridaGetir" Title="Eğer döviz kayıtlı değilse yeni kayıt oluştur" />
+    </div>
+    <div class="d-grid">
+        <button class="btn btn-success btn-lg" @onclick="MerkezBankasindanAl">Merkez Bankası'ndan Al</button>
     </div>
     @if (!string.IsNullOrEmpty(hata))
     {
@@ -43,7 +53,7 @@
     }
 
 -->
-@if (DovizKurlari != null)
+@if (DovizKurlari != null && DovizKurlari.Any())
 {
     <table class="table">
         <thead>
@@ -95,13 +105,20 @@
     </AuthorizeView>
 
 }
-}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        @(ozelMesaj ?? "Kayıt bulunamadı!")
+    </div>
 
+}
 
 @code {
     private List<DovizKuru> DovizKurlari { get; set; } = new List<DovizKuru>();
     private DovizKuru DovizKuru { get; set; } = new DovizKuru();
     private string? hata;
+    private string? ozelMesaj = null;
+    private bool merkezBankasindanOlmayanlaridaGetir = false;
     #region Kullanıcıları Listele
 
     private void RefreshList()
@@ -185,16 +202,16 @@
         DovizKuru = new DovizKuru();
     }
 
-    private void HareketiDeKaydet(DB db, string kaynak)
+    private void HareketiDeKaydet(DB db, DovizKuru dovizKuru, string kaynak)
     {
         db.DovizKuruHareket.Add(
             new DovizKuruHareket
                 {
-                    Tarih = DovizKuru.GuncellemeTarihi,
-                    Alis = DovizKuru.GuncelKurAlis,
-                    Satis = DovizKuru.GuncelKurSatis,
+                    Tarih = dovizKuru.GuncellemeTarihi,
+                    Alis = dovizKuru.GuncelKurAlis,
+                    Satis = dovizKuru.GuncelKurSatis,
                     Kaynak = kaynak,
-                    DovizKuruId = DovizKuru.DovizKuruId
+                    DovizKuruId = dovizKuru.DovizKuruId
                 });
         db.SaveChanges();
     }
@@ -246,9 +263,8 @@
                         {
                             exists.Fill(DovizKuru);
                             exists.GuncellemeTarihi = DateTime.Now;
-                            DovizKuru.GuncellemeTarihi = exists.GuncellemeTarihi;
                             db.SaveChanges();
-                            HareketiDeKaydet(db, "Manuel güncelleme");
+                            HareketiDeKaydet(db, exists, "Manuel güncelleme");
                         }
                         else
                         {
@@ -271,7 +287,7 @@
                         DovizKuru.GuncellemeTarihi = DateTime.Now;
                         db.DovizKuru.Add(DovizKuru);
                         db.SaveChanges();
-                        HareketiDeKaydet(db, "Manuel Ekleme");
+                        HareketiDeKaydet(db, DovizKuru, "Manuel Ekleme");
 
                     }
                 }
@@ -284,11 +300,46 @@
     }
     #endregion
 
+    private void MerkezBankasindanAl()
+    {
+        ozelMesaj = "Merkez Bankası'ndan güncel kur bilgileri alınıyor...";
+        DovizKurlari = new List<DovizKuru>();
+        var kurlar = Helper.MerkezBankasindanAl();
 
-
-
-
-
+        using (var db = new DB())
+        {
+            foreach (var kur in kurlar)
+            {
+                var exists = db.DovizKuru.FirstOrDefault(x => x.DovizCinsi == kur.DovizCinsi);
+                if (exists != null)
+                {
+                    exists.GuncelKurAlis = kur.GuncelKurAlis;
+                    exists.GuncelKurSatis = kur.GuncelKurSatis;
+                    // exists.Fill(kur);
+                    exists.GuncellemeTarihi = DateTime.Now;
+                    db.SaveChanges();
+                    HareketiDeKaydet(db, exists, "Merkez Bankası");
+                }
+                else if (merkezBankasindanOlmayanlaridaGetir)
+                {
+                    var nw = new DovizKuru
+                        {
+                            DovizCinsi = kur.DovizCinsi,
+                            DovizAdi = kur.DovizAdi,
+                            GuncelKurAlis = kur.GuncelKurAlis,
+                            GuncelKurSatis = kur.GuncelKurSatis,
+                            GuncellemeTarihi = DateTime.Now
+                        };
+                    db.DovizKuru.Add(nw);
+                    db.SaveChanges();
+                    HareketiDeKaydet(db, nw, "Merkez Bankası (Yeni)");
+                }
+            }
+        }
+        RefreshList();
+    }
+}
+    }
 
 
 }

@@ -82,9 +82,10 @@ namespace FBC.Basit.Cari.DBModels
                         var tarih = new DateTime(1982, 09, 06);
                         var dovizler = new List<DovizKuru>
                         {
-                            new DovizKuru { DovizCinsi = "TRY", DovizAdi = "Türk Lirası", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            //new DovizKuru { DovizCinsi = "TRY", DovizAdi = "Türk Lirası", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "USD", DovizAdi = "Amerikan Doları", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "EUR", DovizAdi = "Euro", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+                            new DovizKuru { DovizCinsi = "XAU", DovizAdi = "Gram Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "GBP", DovizAdi = "İngiliz Sterlini", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "CHF", DovizAdi = "İsviçre Frangı", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "JPY", DovizAdi = "Japon Yeni", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
@@ -109,7 +110,6 @@ Hamit Altın
 Gümüş
 Platin
  */
-                            new DovizKuru { DovizCinsi = "XAU", DovizAdi = "Gram Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "M_CUMHURIYET_ALTINI", DovizAdi = "Cumhuriyet Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "M_TAM_ALTIN", DovizAdi = "Tam Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
                             new DovizKuru { DovizCinsi = "M_YARIM_ALTIN", DovizAdi = "Yarım Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
