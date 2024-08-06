@@ -4,7 +4,7 @@
 @inject IJSRuntime JS
 
 <PageTitle>Cari Liste</PageTitle>
-<div id="top"/>
+<div id="top" />
 <AuthorizeView Roles="CanEditData">
     @if (cariKartIdOnly == null)
     {
@@ -23,8 +23,8 @@
 }
 else
 {
-    var toplamBorc = liste.Sum(x => x.Borc);
-    var toplamAlacak = liste.Sum(x => x.Alacak);
+    var toplamBorc = liste.Sum(x => x.ReelBorc);
+    var toplamAlacak = liste.Sum(x => x.ReelAlacak);
     <div class="row">
         <CheckBox @bind-Data="bakiyesiOlmayanlariGizle" Title="Bakiyesi olmayanları gizle" />
     </div>
@@ -50,9 +50,9 @@ else
                     <tr>
                         <td rowspan="@(hasNote ? "2" : "")">@item.CariKartId</td>
                         <td>@item.Isim</td>
-                        <td>@($"₺{item.Borc:n}")</td>
-                        <td>@($"₺{item.Alacak:n}")</td>
-                        <td>@($"₺{item.Bakiye:n}")</td>
+                        <td>@($"₺{item.ReelBorc:n}")</td>
+                        <td>@($"₺{item.ReelAlacak:n}")</td>
+                        <td>@($"₺{item.ReelBakiye:n}")</td>
                         <td rowspan="@(hasNote ? "2" : "")">
                             <a href="/cari/goster/@item.CariKartId" class="btn btn-primary">Aç</a>
 
@@ -104,6 +104,9 @@ else
         public decimal Borc { get; set; }
         public decimal Alacak { get; set; }
         public decimal Bakiye { get => Alacak - Borc; }
+        public decimal ReelBorc { get; set; }
+        public decimal ReelAlacak { get; set; }
+        public decimal ReelBakiye { get => ReelAlacak - ReelBorc; }
 
     }
 
@@ -131,7 +134,7 @@ else
         {
             using (var db = new DB())
             {
-                //TODO Kullanıcı ile ilişkilendirilmişse FOREIGN KEY hatası verecektir. 
+                //TODO Kullanıcı ile ilişkilendirilmişse FOREIGN KEY hatası verecektir.
                 var har = db.CariHareket.Where(x => x.CariKartId == silinecekId);
                 db.CariHareket.RemoveRange(har);
                 var kart = db.CariKart.Where(x => x.CariKartId == silinecekId);
@@ -206,18 +209,28 @@ else
             liste =
             (
                 cariKartIdOnly != null
-                    ? db.CariKart.AsNoTracking().Include(p => p.Hareketler).Where(x => x.CariKartId == cariKartIdOnly)//.OrderBy(x=> x.Isim)
-                    : db.CariKart.AsNoTracking().Include(p => p.Hareketler)//.OrderBy(x=> x.Isim)
+                    ? db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru).Where(x => x.CariKartId == cariKartIdOnly)//.OrderBy(x=> x.Isim)
+                    : db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru)//.OrderBy(x=> x.Isim)
             )
             .ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
-            .Select(x => new CariOzet()
-                {
-                    CariKartId = x.CariKartId,
-                    Isim = x.Isim,
-                    Notlar = x.Notlar,
-                    Borc = x.Hareketler.Sum(x => x.Borc),
-                    Alacak = x.Hareketler.Sum(x => x.Alacak)
-                }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
+                      // .SelectMany(x => x.Hareketler)
+                      // .Select(x=> new CariHareketWrapper(x))
+            .Select(x =>
+            {
+                var wh = x.Hareketler.Select(x => new CariHareketWrapper(x)).ToList();
+
+                var r = new CariOzet()
+                    {
+                        CariKartId = x.CariKartId,
+                        Isim = x.Isim,
+                        Notlar = x.Notlar,
+                        Borc = wh.Sum(x => x.Borc),
+                        Alacak = wh.Sum(x => x.Alacak),
+                        ReelBorc = wh.Sum(x => x.BorcDovizSatis),
+                        ReelAlacak = wh.Sum(x => x.AlacakDovizSatis)
+                    };
+                return r;
+            }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
             InvokeAsync(() => StateHasChanged());
 
         }

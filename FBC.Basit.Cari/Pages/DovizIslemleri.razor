@@ -24,14 +24,14 @@
         }
         <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(DovizKuru.DovizKuruId > 0 ? "Kaydet" : "Ekle")</button>
     </div>
-@*     <div>
-        <small class="text-muted">Son güncelleme: @DovizKuru.GuncellemeTarihi</small>
+    @*     <div>
+    <small class="text-muted">Son güncelleme: @DovizKuru.GuncellemeTarihi</small>
     </div> *@
-    <div class="row" >
+    <div class="row">
         <CheckBox @bind-Data="merkezBankasindanOlmayanlaridaGetir" Title="Eğer döviz kayıtlı değilse yeni kayıt oluştur" />
     </div>
     <div class="d-grid">
-        <button class="btn btn-success btn-lg" @onclick="MerkezBankasindanAl">Merkez Bankası'ndan Al</button>
+        <button class="btn btn-success btn-lg" @onclick="MerkezBankasindanAl">İnternet'ten güncelle</button>
     </div>
     @if (!string.IsNullOrEmpty(hata))
     {
@@ -40,19 +40,6 @@
         </div>
     }
 </div>
-<!--
- public class DovizKuru
-    {
-        [Key]
-        public int DovizKuruId { get; set; }
-        public string DovizCinsi { get; set; }
-        public string DovizAdi { get; set; }
-        public decimal GuncelKurAlis { get; set; }
-        public decimal GuncelKurSatis { get; set; }
-        public DateTime GuncellemeTarihi { get; set; }
-    }
-
--->
 @if (DovizKurlari != null && DovizKurlari.Any())
 {
     <table class="table">
@@ -300,12 +287,8 @@ else
     }
     #endregion
 
-    private void MerkezBankasindanAl()
+    private async void ApplyDovizKuru(IEnumerable<DovizKuru> kurlar, string source)
     {
-        ozelMesaj = "Merkez Bankası'ndan güncel kur bilgileri alınıyor...";
-        DovizKurlari = new List<DovizKuru>();
-        var kurlar = Helper.MerkezBankasindanAl();
-
         using (var db = new DB())
         {
             foreach (var kur in kurlar)
@@ -318,7 +301,7 @@ else
                     // exists.Fill(kur);
                     exists.GuncellemeTarihi = DateTime.Now;
                     db.SaveChanges();
-                    HareketiDeKaydet(db, exists, "Merkez Bankası");
+                    HareketiDeKaydet(db, exists, source);
                 }
                 else if (merkezBankasindanOlmayanlaridaGetir)
                 {
@@ -332,14 +315,25 @@ else
                         };
                     db.DovizKuru.Add(nw);
                     db.SaveChanges();
-                    HareketiDeKaydet(db, nw, "Merkez Bankası (Yeni)");
+                    HareketiDeKaydet(db, nw, $"{source} (Yeni)");
                 }
             }
         }
+    }
+
+    private async void MerkezBankasindanAl()
+    {
+        ozelMesaj = "Merkez Bankası'ndan güncel kur bilgileri alınıyor...";
+        DovizKurlari = new List<DovizKuru>();
+        var kurlar = Helper.MerkezBankasindanAl().ToList();
+        ApplyDovizKuru(kurlar, "Merkez Bankası");
+        try
+        {
+            var altinlar = await Helper.AltinInDenAlAsync();
+            ApplyDovizKuru(altinlar, "altin.in");
+        }
+        catch { }
+
         RefreshList();
     }
-}
-    }
-
-
 }

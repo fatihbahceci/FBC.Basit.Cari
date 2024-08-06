@@ -3,75 +3,17 @@ using FBC.Basit.Cari.DBModels;
 using System.Globalization;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Text;
+using HtmlAgilityPack;
 
 namespace FBC.Basit.Cari
 {
-    [XmlRoot(ElementName = "Currency")]
-    public class Currency
+    public static class Helper
     {
-        [XmlAttribute("CrossOrder")]
-        public int CrossOrder { get; set; }
-
-        [XmlAttribute("Kod")]
-        public string Kod { get; set; }
-
-        [XmlAttribute("CurrencyCode")]
-        public string CurrencyCode { get; set; }
-
-        [XmlElement("Unit")]
-        public int Unit { get; set; }
-
-        [XmlElement("Isim")]
-        public string Isim { get; set; }
-
-        [XmlElement("CurrencyName")]
-        public string CurrencyName { get; set; }
-
-        [XmlElement("ForexBuying")]
-        public string ForexBuying { get; set; }
-
-        [XmlElement("ForexSelling")]
-        public string ForexSelling { get; set; }
-
-        [XmlIgnore]
-        public decimal ForexBuyingAsDecimal => string.IsNullOrEmpty(ForexBuying)? 0: decimal.Parse(ForexBuying ?? "0", CultureInfo.InvariantCulture);
-        [XmlIgnore]
-        public decimal ForexSellingAsDecimal => string.IsNullOrEmpty(ForexSelling) ? 0 : decimal.Parse(ForexSelling ?? "0", CultureInfo.InvariantCulture);
-
-        //[XmlElement("BanknoteBuying")]
-        //public decimal? BanknoteBuying { get; set; }
-
-        //[XmlElement("BanknoteSelling")]
-        //public decimal? BanknoteSelling { get; set; }
-
-        //[XmlElement("CrossRateUSD")]
-        //public decimal? CrossRateUSD { get; set; }
-
-        //[XmlElement("CrossRateOther")]
-        //public decimal? CrossRateOther { get; set; }
-    }
-
-    [XmlRoot(ElementName = "Tarih_Date")]
-    public class TarihDate
-    {
-
-        [XmlElement(ElementName = "Currency")]
-        public List<Currency> Currency { get; set; }
-
-        [XmlAttribute(AttributeName = "Tarih")]
-        public string Tarih { get; set; }
-
-        [XmlAttribute(AttributeName = "Date")]
-        public string Date { get; set; }
-
-        [XmlAttribute(AttributeName = "Bulten_No")]
-        public string BultenNo { get; set; }
-
-        [XmlText]
-        public string Text { get; set; }
-    }
-    public class Helper
-    {
+        static Helper()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
         public static IEnumerable<DovizKuru> MerkezBankasindanAl()
         {
             var url = "https://www.tcmb.gov.tr/kurlar/today.xml";
@@ -107,6 +49,72 @@ namespace FBC.Basit.Cari
                 }
             }
 
+        }
+        public static async Task<IEnumerable<DovizKuru>> AltinInDenAlAsync()
+        {
+            string url = "https://altin.in/";
+            using HttpClient client = new HttpClient();
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            byte[] contentBytes = await response.Content.ReadAsByteArrayAsync();
+            string htmlContent = Encoding.GetEncoding("ISO-8859-9").GetString(contentBytes);
+
+            HtmlDocument document = new HtmlDocument();
+            document.LoadHtml(htmlContent);
+            //new DovizKuru { DovizCinsi = "M_CUMHURIYET_ALTINI", DovizAdi = "Cumhuriyet Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_TAM_ALTIN", DovizAdi = "Tam Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_YARIM_ALTIN", DovizAdi = "Yarım Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_CEYREK_ALTIN", DovizAdi = "Çeyrek Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_RESAT_ALTINI", DovizAdi = "Reşat Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_KULPLU_RESAT_ALTINI", DovizAdi = "Kulplu Reşat Altını", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_22_AYAR_ALTIN", DovizAdi = "22 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_18_AYAR_ALTIN", DovizAdi = "18 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_14_AYAR_ALTIN", DovizAdi = "14 Ayar Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_GREMSE_ALTIN", DovizAdi = "Gremse Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_ATA_ALTIN", DovizAdi = "Ata Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_HAS_ALTIN", DovizAdi = "Has Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_HAMIT_ALTIN", DovizAdi = "Hamit Altın", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_GUMUS", DovizAdi = "Gümüş", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih },
+            //new DovizKuru { DovizCinsi = "M_PLATIN", DovizAdi = "Platin", GuncelKurAlis = 1, GuncelKurSatis = 1, GuncellemeTarihi = tarih }
+
+            // Extract data for each type of precious metal
+            var metals = new[]
+            {
+            new {Kod = "XAU", Name = "Gram Altın", BuyXPath = "//div[@class='kurlar' and @title='Gram Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Gram Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_CUMHURIYET_ALTINI", Name = "Cumhuriyet Altını", BuyXPath = "//div[@class='kurlar' and @title='Cumhuriyet Altını']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Cumhuriyet Altını']//li[@class='midrow satis']" },
+            new {Kod = "M_TAM_ALTIN", Name = "Tam Altın", BuyXPath = "//div[@class='kurlar' and @title='Tam Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Tam Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_YARIM_ALTIN", Name = "Yarım Altın", BuyXPath = "//div[@class='kurlar' and @title='Yarım Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Yarım Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_CEYREK_ALTIN", Name = "Çeyrek Altın", BuyXPath = "//div[@class='kurlar' and @title='Çeyrek Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Çeyrek Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_RESAT_ALTINI", Name = "Reşat Altın", BuyXPath = "//div[@class='kurlar' and @title='Reşat Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Reşat Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_22_AYAR_ALTIN", Name = "22 Ayar Bilezik", BuyXPath = "//div[@class='kurlar' and @title='22 Ayar Bilezik']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='22 Ayar Bilezik']//li[@class='midrow satis']" },
+            new {Kod = "M_18_AYAR_ALTIN", Name = "18 Ayar Altın", BuyXPath = "//div[@class='kurlar' and @title='18 Ayar Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='18 Ayar Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_14_AYAR_ALTIN", Name = "14 Ayar Altın", BuyXPath = "//div[@class='kurlar' and @title='14 Ayar Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='14 Ayar Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_GREMSE_ALTIN", Name = "Gremse Altın", BuyXPath = "//div[@class='kurlar' and @title='Gremse Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Gremse Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_HAS_ALTIN", Name = "Hamit Altın", BuyXPath = "//div[@class='kurlar' and @title='Hamit Altın']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Hamit Altın']//li[@class='midrow satis']" },
+            new {Kod = "M_GUMUS", Name = "Gümüş", BuyXPath = "//div[@class='kurlar' and @title='Gümüş']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Gümüş']//li[@class='midrow satis']" },
+            new {Kod = "M_PLATIN", Name = "Platin", BuyXPath = "//div[@class='kurlar' and @title='Platin']//li[@class='midrow alis']", SellXPath = "//div[@class='kurlar' and @title='Platin']//li[@class='midrow satis']" }
+        };
+            var r = new List<DovizKuru>();
+            foreach (var metal in metals)
+            {
+                var buyNode = document.DocumentNode.SelectSingleNode(metal.BuyXPath);
+                var sellNode = document.DocumentNode.SelectSingleNode(metal.SellXPath);
+
+                string buyPrice = buyNode?.InnerText.Trim() ?? "0.00";
+                string sellPrice = sellNode?.InnerText.Trim() ?? "0.0";
+
+                Console.WriteLine($"{metal.Name} - Buy: {buyPrice}, Sell: {sellPrice}");
+                //yield return new DovizKuru
+                r.Add(new DovizKuru
+                {
+                    DovizCinsi = metal.Kod,
+                    DovizAdi = metal.Name,
+                    GuncelKurAlis = Convert.ToDecimal(buyPrice, CultureInfo.InvariantCulture),
+                    GuncelKurSatis = Convert.ToDecimal(sellPrice, CultureInfo.InvariantCulture),
+                    GuncellemeTarihi = DateTime.Now
+                });
+            }
+            return r;
         }
         public static IEnumerable<DovizKuru> MerkezBankasindanAlEski()
         {
