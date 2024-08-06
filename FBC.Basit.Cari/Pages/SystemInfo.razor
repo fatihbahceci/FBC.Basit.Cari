@@ -1,6 +1,14 @@
 ﻿@attribute [Authorize(Roles = "Admin")];
+@inject IJSRuntime JS
+
 @using FBC.Basit.Cari.Auth
 @page "/sys"
+
+<div class="row col-md-8 col-lg-6 col-xl-4">
+    <button @onclick="DownloadFileFromStream">
+        Backup and Download Database
+    </button>
+</div>
 
 <h3>SystemInfo</h3>
 <a href="javascript: void(0);" @onclick="updateSummary">Yenile</a>
@@ -24,6 +32,7 @@
         </tbody>
     </table>
 }*@
+
 @if (ssNode != null)
 {
     Action<IReadOnlyCollection<FBCTreeNode<KeyValuePair<string, string>>>> prn = null;
@@ -59,5 +68,20 @@
     protected override async Task OnInitializedAsync()
     {
         updateSummary();
+    }
+
+    private async Task DownloadFileFromStream()
+    {
+        using (var db = new DB())
+        {
+            var filePath = db.SaveChangesAndBackup();
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            // GetFileStream();
+            var fileName = Path.GetFileName(filePath);
+
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        }
     }
 }

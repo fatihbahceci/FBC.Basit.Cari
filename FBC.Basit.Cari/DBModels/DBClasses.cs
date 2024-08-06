@@ -171,5 +171,55 @@ Platin
 
             base.OnModelCreating(modelBuilder);
         }
+
+        public string SaveChangesAndBackup()
+        {
+            SaveChanges();
+
+            ExecuteCheckpointAndClose();
+            return CreateBackup();
+        }
+        private void ExecuteCheckpointAndClose()
+        {
+            using (var connection = Database.GetDbConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    // Set the database to single user mode
+                    //Sanıyorum ki .db-shm .db-val dosyalarını bu siliyor.
+                    command.CommandText = "PRAGMA journal_mode = DELETE;";
+                    command.ExecuteNonQuery();
+
+                    // Perform a checkpoint to ensure all changes are written
+                    command.CommandText = "PRAGMA wal_checkpoint(FULL);";
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = "VACUUM;";
+                    command.ExecuteNonQuery();
+                }
+                connection.Close();
+            }
+
+            // Ensure all finalizers have run and resources are released
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        private string CreateBackup()
+        {
+            string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DatabaseBackups");
+            if (!Directory.Exists(backupDir))
+            {
+                Directory.CreateDirectory(backupDir);
+            }
+
+            string backupPath = Path.Combine(backupDir, $"basitcari_backup_{DateTime.Now:yyyyMMddHHmmss}.db");
+            File.Copy(DbPath, backupPath, true);
+            return backupPath;
+        }
     }
 }
