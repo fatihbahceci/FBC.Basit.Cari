@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using FBC.Basit.Cari.Auth;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Components.Server.Circuits;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 FBC.Basit.Cari.DBModels.DB.MigrateDB();
@@ -15,6 +16,8 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthenticationStateProvider, FBCSessionedAuthenticationStateProvider>();
 builder.Services.AddSingleton<CircuitHandler, FBCCircuitHandlerService>();
+builder.Services.AddRadzenComponents();
+
 var app = builder.Build();
 
 //https://stackoverflow.com/questions/63038712/httpcontext-connection-remoteipaddress-returns-127-0-0-1-on-the-server

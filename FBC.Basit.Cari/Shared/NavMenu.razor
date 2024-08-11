@@ -1,66 +1,31 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">FBC.Basit.Cari</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-@*https://useiconic.com/open*@
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
+﻿<RadzenSidebar @bind-Expanded="@sidebar1Expanded">
+    <RadzenPanelMenu>
         <AuthorizeView>
             <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
-                        <span class="oi oi-home" aria-hidden="true"></span> Home
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Logout">
-                        <span class="oi oi-account-logout" aria-hidden="true"></span> Çıkış
-                    </NavLink>
-                </div>
-
+                <RadzenPanelMenuItem Text="Ana Sayfa" Icon="home" Path="/" />
             </Authorized>
-
-
-
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Login">
-                        <span class="oi oi-account-login" aria-hidden="true"></span> Giriş
-                    </NavLink>
-                </div>
-            </NotAuthorized>
         </AuthorizeView>
         <AuthorizeView Roles="Admin">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="Users">
-                    <span class="oi oi-person" aria-hidden="true"></span>  Kullanıcılar
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="DovizIslemleri">
-                    <span class="oi oi-dollar" aria-hidden="true"></span>  Döviz İşlemleri
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="sys">
-                    <span class="oi oi-bug" aria-hidden="true"></span>  SysInfo
-                </NavLink>
-            </div>
+            <RadzenPanelMenuItem Text="Kullanıcılar" Icon="group" Path="Users" />
+            <RadzenPanelMenuItem Text="Döviz İşlemleri" Icon="payments" Path="DovizIslemleri" />
+            <RadzenPanelMenuItem Text="SysInfo" Icon="dns" Path="sys" />
         </AuthorizeView>
-    </nav>
-</div>
+        <AuthorizeView>
+            <Authorized>
+                <RadzenPanelMenuItem Text="Çıkış" Icon="logout" Path="Logout" />
+            </Authorized>
+            <NotAuthorized>
+                <RadzenPanelMenuItem Text="Giriş" Icon="login" Path="Login" />
+            </NotAuthorized>
+        </AuthorizeView>
+    </RadzenPanelMenu>
+    @*<div class="rz-p-4">
+    Sidebar
+    </div> *@
+</RadzenSidebar>
+
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    [CascadingParameter(Name = "SidebarState")]
+    public bool sidebar1Expanded { get; set; }
 }

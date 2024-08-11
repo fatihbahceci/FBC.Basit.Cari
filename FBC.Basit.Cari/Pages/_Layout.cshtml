@@ -12,6 +12,11 @@
     <link href="css/site.css" rel="stylesheet" />
     <link href="FBC.Basit.Cari.styles.css" rel="stylesheet" />
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+    @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">*@
+    @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css">*@
+    @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/dark.css">*@
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard.css">
+    @*https://github.com/radzenhq/radzen-blazor/tree/master/Radzen.Blazor/themes*@
 </head>
 <body>
     @RenderBody()
@@ -29,5 +34,7 @@
 
     <script src="js/site.js"></script>
     <script src="_framework/blazor.server.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+
 </body>
 </html>

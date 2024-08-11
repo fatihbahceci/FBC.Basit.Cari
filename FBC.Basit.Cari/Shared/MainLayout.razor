@@ -4,52 +4,39 @@
 
 <PageTitle>FBC.Basit.Cari</PageTitle>
 
-@*<button @onclick="GetClaimsPrincipalData">Get ClaimsPrincipal Data</button>
-    @if (_claims.Count() > 0)
-    {
-    <ul>
-    @foreach (var claim in _claims)
-    {
-    <li>@claim.Type: @claim.Value</li>
-    }
-    </ul>
-    }
-
-    <p>@_surnameMessage</p>
-*@
-
-<div class="page">
-    <div class="sidebar d-print-none">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4 d-print-none">
-            <AuthorizeView>
-                <Authorized>
-                    <span class="badge rounded-pill bg-primary">@userTitle</span>
-                    <a class="badge rounded-pill bg-dark" href="/Logout">Çıkış</a>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/Login">Giriş</a>
-
-                </NotAuthorized>
-            </AuthorizeView>
-            <a href="javascript:void(0);" @onclick="()=> {showVersion = !showVersion;}">@(showVersion ?TypeHelper.GetAppVersionInfo():"?")</a>
-        </div>
-
-        <CascadingValue Value="userCariKartId" Name="userCariKartId">
-            <article class="content px-4">
-                @Body
-            </article>
+<RadzenLayout>
+    <CascadingValue Value="userCariKartId" Name="userCariKartId">
+        <CascadingValue Value="sidebar1Expanded" Name="SidebarState">
+            <RadzenHeader>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenSidebarToggle Click="@(() => sidebar1Expanded = !sidebar1Expanded)" />
+                    <AuthorizeView>
+                        <Authorized>
+                            <RadzenLabel Text="@userTitle" />
+                        </Authorized>
+                        <NotAuthorized>
+                            <RadzenLabel Text="FBC.Basit.Cari" />
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </RadzenStack>
+            </RadzenHeader>
+            <NavMenu />
+            <RadzenBody>
+                <div class="rz-p-4">
+                    @Body
+                </div>
+            </RadzenBody>
+            <RadzenFooter>
+                <RadzenText Text="@TypeHelper.GetAppVersionInfo()" />
+            </RadzenFooter>
         </CascadingValue>
-    </main>
-</div>
-
+    </CascadingValue>
+</RadzenLayout>
 
 @code {
-    private string userTitle { get; set; } = "";
+    bool sidebar1Expanded = true;
     private int? userCariKartId { get; set; }
+    private string userTitle { get; set; } = "";
     private bool showVersion = false;
     [CascadingParameter]
     private Task<AuthenticationState> aState { get; set; }
@@ -88,7 +75,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        InvokeAsync(() => CheckAuth()); //It's important because of sceurity reasons -FBC https://github.com/fatihbahceci/FBC.Basit.Cari/issues/7
+        await InvokeAsync(() => CheckAuth()); //It's important because of sceurity reasons -FBC https://github.com/fatihbahceci/FBC.Basit.Cari/issues/7
     }
 
     protected override void OnAfterRender(bool firstRender)
