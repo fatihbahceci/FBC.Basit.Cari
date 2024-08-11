@@ -88,10 +88,6 @@
 </RadzenDataGrid>
 <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
-<AuthorizeView Roles="CanEditData">
-
-</AuthorizeView>
-
 @code {
     RadzenDataGrid<CariOzet>? grid;
     private List<CariOzet>? liste;

@@ -3,6 +3,8 @@
 @using System.Linq;
 @using FBC.Components;
 @inject IJSRuntime JS
+@inject NotificationService NTF
+@inject DialogService DLG
 
 
 @if (cariKart == null)
@@ -12,63 +14,71 @@
 }
 else
 {
-    var toplamBorc = hareketler.Sum(x => x.BorcDovizSatis);
-    var toplamAlacak = hareketler.Sum(x => x.AlacakDovizSatis);
-
     <PageTitle>@cariKart.Isim - Cari Göster</PageTitle>
     <h1>@cariKart.Isim</h1>
     if (!string.IsNullOrEmpty(cariKart.Notlar))
     {
-       <div class="d-print-none">
-          <h2>Notlar:</h2>
-          <pre>@cariKart.Notlar</pre>
-       </div>
+        <div class="d-print-none">
+            <h2>Notlar:</h2>
+            <pre>@cariKart.Notlar</pre>
+        </div>
     }
-<!-- 
-       public int CariHareketId { get; set; }
-        public DateTime? Tarih { get; set; }
-        public string? Aciklama { get; set; }
-        public string? EvrakNo { get; set; }
-        public decimal Borc { get; set; }
-        public decimal Alacak { get; set; }
-        public DateTime? VadeTarihi { get; set; }
-        public int CariKartId { get; set; }
-        public int? DovizKuruId { get; set; }
-        public decimal DovizKuruAlis { get; set; }
-        public decimal DovizKuruSatis { get; set; }
-        public string DovizCinsi { get; set; }
-        public string DovizAdi { get; set; }
-        public DateTime DovizGuncellemeTarihi { get; set; }
-        public decimal BorcDovizAlis { get => Borc * DovizKuruAlis; }
-        public decimal BorcDovizSatis { get => Borc * DovizKuruSatis; }
-        public decimal AlacakDovizAlis { get => Alacak * DovizKuruAlis; }
-        public decimal AlacakDovizSatis { get => Alacak * DovizKuruSatis; }
 
--->
     <id id="cariekle" />
     <AuthorizeView Roles="CanEditData">
         <div class="container px-5 my-5 d-print-none">
             <div class="row">
-                <DatePicker @bind-Data="hareket.Tarih" FormPanelExtraClass="col" Title="Tarih" />
-                <DatePicker @bind-Data="hareket.VadeTarihi" FormPanelExtraClass="col" Title="VadeTarihi" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                    <RadzenLabel Text="Tarih" />
+
+                    <RadzenDatePicker @bind-Value="hareket.Tarih" Title="Tarih" DateFormat="d" Style="width: 100%" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                    <RadzenLabel Text="Vade Tarihi" />
+                    <RadzenDatePicker @bind-Value="hareket.VadeTarihi" Title="Vade Tarihi" DateFormat="d" Style="width: 100%" />
+                </RadzenStack>
             </div>
-            <TextBox @bind-Data="hareket.Aciklama" Title="Aciklama" />
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                <RadzenLabel Text="Açıklama" />
+                <RadzenTextBox @bind-Value="hareket.Aciklama" Placeholder="Açıklama" Style="width: 100%" />
+            </RadzenStack>
             <div class="row">
-                <TextBox @bind-Data="hareket.Borc" FormPanelExtraClass="col" Title="Borc" />
-                <TextBox @bind-Data="hareket.Alacak" FormPanelExtraClass="col" Title="Alacak" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                    <RadzenLabel Text="Borç" />
+                    <RadzenNumeric @bind-Value="hareket.Borc" Title="Borç" Style="width: 100%" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                    <RadzenLabel Text="Alacak" />
+                    <RadzenNumeric @bind-Value="hareket.Alacak" Title="Alacak" Style="width: 100%" />
+                </RadzenStack>
             </div>
 
-            <div>
-                  <DovizSecCombo @bind-Data="hareket.DovizKuruId" Collection="dovizKurlari" Title="Döviz Kuru" />
+            <div class="row">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+                    <RadzenLabel Text="Döviz Kuru" Style="width: 25%" />
+                    <RadzenDropDown @bind-Value="hareket.DovizKuruId"
+                                    Data="@dovizKurlari"
+                                    ValueProperty="@nameof(DovizKuru.DovizKuruId)"
+                                    TextProperty="@nameof(DovizKuru.DovizAdi)"
+                                    Style="width: 75%"
+                                    Title="Döviz Kuru">
+                        <Template Context="x">
+                            @((x as DovizKuru)!.DovizAdi) (@((x as DovizKuru)!.DovizCinsi))
+                        </Template>
+                        @*   <ValueTemplate Context="x">
+                    @(x as DovizKuru).DovizAdi (@(x as DovizKuru).DovizCinsi) Paça
+                    </ValueTemplate> *@
+                    </RadzenDropDown>
+                </RadzenStack>
             </div>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                @if (hareket.CariHareketId > 0)
+                {
+                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="Yeni">Yeni</RadzenButton>
+                }
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="Kaydet">@(hareket.CariHareketId > 0 ? "Kaydet" : "Ekle")</RadzenButton>
+            </RadzenStack>
 
-            <div class="d-grid">
-            @if (hareket.CariHareketId > 0)
-            {
-                <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
-            }
-            <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(hareket.CariHareketId > 0 ? "Kaydet" : "Ekle")</button>
-            </div>
             @if (!string.IsNullOrEmpty(hata))
             {
                 <div class="alert alert-danger" role="alert">
@@ -79,90 +89,57 @@ else
     </AuthorizeView>
     <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
+    <RadzenDataGrid @ref="grid"
+                    TItem="CariHareketWrapper"
+                    Data="@hareketler"
+                    Count="@listeTotalCount"
+                    LoadData="LoadData"
+                    AllowSorting="true"
+                    FilterMode="FilterMode.Simple"
+                    AllowFiltering="true"
+                    AllowColumnPicking="false"
+                    AllowPaging="true"
+                    PagerHorizontalAlign="HorizontalAlign.Center"
+                    PageSizeOptions="new int[]{10,20,50,100,500}"
+                    PagerPosition="PagerPosition.TopAndBottom"
+                    PageSize="20"
+                    ShowPagingSummary="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="CariHareketId" Width="100px" Title="Id" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Tarih" FormatString="{0:d}" Width="100px" Title="Tarih" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Aciklama" Title="Aciklama" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Borc" Width="100px" FormatString="{0:C}" Title="Borc" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Alacak" Width="100px" FormatString="{0:C}" Title="Alacak" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="VadeTarihi" FormatString="{0:d}" Width="100px" Title="VadeTarihi" Filterable="false" />
+            <AuthorizeView Roles="CanEditData">
+                <RadzenDataGridColumn TItem="CariHareketWrapper" Title="İşlemler" Width="200px" Pickable="false" Filterable="false">
+                    <Template Context="item">
+                        <RadzenSplitButton Text="Düzenle" Click="@(s => Act(s?.Value ?? "E" , item.CariHareketId))">
+                            <ChildContent>
+                                <RadzenSplitButtonItem Text="Düzenle" Value="E" />
+                                <RadzenSplitButtonItem Text="Sil" Value="D" />
+                            </ChildContent>
+                        </RadzenSplitButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </AuthorizeView>
+        </Columns>
+    </RadzenDataGrid>
 
-    @if (hareketler != null)
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Tarih</th>
-                    <th>Aciklama</th>
-                    <th>Borc</th>
-                    <th>Alacak</th>
-                    <th>VadeTarihi</th>
-                    <AuthorizeView Roles="CanEditData">
-                        <th class="d-print-none">İşlemler</th>
-                    </AuthorizeView>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in hareketler)
-                {
-                    <tr>
-                        <td>@item.CariHareketId</td>
-                        <td>@item.Tarih</td>
-                        <td>@item.Aciklama</td>
-                        <td>@item.Borc</td>
-                        <td>@item.Alacak</td>
-                        <td>@item.VadeTarihi</td>
-                        <AuthorizeView Roles="CanEditData">
-                            <td class="d-print-none"  rowspan="@(item.DovizKuruId != null ? "3" : "")">
-                                <button class="btn btn-primary" @onclick="()=> Duzenle(item.CariHareketId)">Düzenle</button>
-                                <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariHareketId)">Sil</a>
-                            </td>
-                        </AuthorizeView>
-                    </tr>
-                    if (item.DovizKuruId!= null)
-                    {
-                        <tr>
-                            <td>Doviz</td>
-                            <td>Alış/Satış</td>
-                            <td>BorcDovizAlis</td>
-                            <td>BorcDovizSatis</td>
-                            <td>AlacakDovizAlis</td>
-                            <td>AlacakDovizSatis</td>
-                        </tr>
-
-                        <tr>
-                            <td>@item.DovizAdi (@item.DovizCinsi)</td>
-                            <td>@item.DovizKuruAlis/@item.DovizKuruSatis</td>
-                            <td>@item.BorcDovizAlis</td>
-                            <td>@item.BorcDovizSatis</td>
-                            <td>@item.AlacakDovizAlis</td>
-                            <td>@item.AlacakDovizSatis</td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-        <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" ExtraClass="d-print-none"/>
-
-        <AuthorizeView Roles="CanEditData">
-            <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
-                <Body>
-                @{
-                    var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-                 }
-                    <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
-                </Body>
-                <Footer>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-                </Footer>
-            </ModalForm>
-        </AuthorizeView>
-
-    }
+    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" ExtraClass="d-print-none" />
 }
 
 @*https://www.meziantou.net/anchor-navigation-in-a-blazor-application.htm*@
 
 
 @code {
+    RadzenDataGrid<CariHareketWrapper>? grid;
+
     [Parameter]
     public int Id { get; set; }
     private CariKart? cariKart;
     private List<CariHareketWrapper>? hareketler;
+    private int listeTotalCount;
     private List<DovizKuru>? dovizKurlari;
     private CariHareket hareket = new CariHareket();
     private string? hata;
@@ -170,40 +147,119 @@ else
     [CascadingParameter(Name = "userCariKartId")]
     private int? cariKartIdOnly { get; set; }
 
-    ModalForm silDlg;
-    private int silinecekId = -1;
-    private int silinecekIdValidate = 0;
+    decimal toplamBorc = 0; //hareketler.Sum(x => x.BorcDovizSatis);
+    decimal toplamAlacak = 0; //hareketler.Sum(x => x.AlacakDovizSatis);
 
 
-
-    private void ShowSilDlg(int id)
+    protected override void OnInitialized()
     {
-        silinecekId = id;
-        silDlg.Open();
+        using (var db = new DB())
+        {
+            dovizKurlari = db.DovizKuru.AsNoTracking().ToList();
+            dovizKurlari.Insert(0, new DovizKuru() { DovizKuruId = 0, DovizAdi = "TL", DovizCinsi = "TRY" });
+            cariKart =
+            (
+                cariKartIdOnly != null
+                    ? db.CariKart.AsNoTracking().Where(x => x.CariKartId == cariKartIdOnly)
+                    : db.CariKart.AsNoTracking()
+            )
+            // .Include(x => x.Hareketler)
+            .Where(x => x.CariKartId == Id)
+            .FirstOrDefault();
+        }
     }
 
-    private void Sil()
+    private async Task Act(string act, int id)
     {
-        if (silinecekIdValidate == silinecekId)
+        switch (act)
         {
+            case "D":
+                await ShowSilDlg(id);
+                break;
+            case "E":
+                Duzenle(id);
+                break;
+        }
+        await Task.Yield();
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        await Task.Yield();
+        try
+        {
+
             using (var db = new DB())
             {
-                var har = db.CariHareket.Where(x => x.CariHareketId == silinecekId);
-                db.CariHareket.RemoveRange(har);
-                db.SaveChanges();
-            }
-            silinecekId = -1;
-            silinecekIdValidate = 0;
-            silDlg.Close();
-            RefreshList();
-        }
 
+                if (cariKart != null)
+                {
+                    var all = db.CariHareket
+                        .Where(x => x.CariKartId == cariKart.CariKartId)
+                        .Include(x => x.DovizKuru)
+                        .OrderByDescending(x => x.Tarih)
+                        .ThenBy(x => x.VadeTarihi)
+                        .ThenByDescending(x => x.CariHareketId)
+                        .Select(x => new CariHareketWrapper(x))
+                        .ToList();
+
+                    listeTotalCount = all.Count;
+                    toplamBorc = all.Sum(x => x.BorcDovizSatis);
+                    toplamAlacak = all.Sum(x => x.AlacakDovizSatis);
+                    // if (bakiyesiOlmayanlariGizle)
+                    // {
+                    //     all = all.Where(x => x.ReelBakiye != 0).ToList();
+                    //     listeTotalCount = all.Count;
+                    // }
+                    hareketler = all.Skip(args.Skip ?? 0).Take(args.Top ?? int.MaxValue).ToList();
+                };
+            }
+        }
+        catch (Exception exc)
+        {
+            hareketler = new List<CariHareketWrapper>();
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
     }
+
+
+    private async Task ShowSilDlg(int id)
+    {
+        if (cariKartIdOnly != null)
+        {
+            NTF.Notify(NotificationSeverity.Error, "Hata!", "Yetkiniz yok!");
+            return;
+        }
+        var r = await DLG.OpenAsync<FBC.Components.ConfirmDeleteDlg>(
+            "Silmek istediğinize emin misiniz?",
+            new Dictionary<string, object> { { "Id", id } });
+        try
+        {
+            if (r is bool b == true)
+            {
+                using (var db = new DB())
+                {
+                    var har = db.CariHareket.Where(x => x.CariHareketId == id);
+                    db.CariHareket.RemoveRange(har);
+                    db.SaveChanges();
+                }
+                grid?.Reload();
+                NTF.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt silindi");
+            }
+        }
+        catch (Exception exc)
+        {
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
+    }
+
+
 
 
     private void Duzenle(int id)
     {
-        hareket = hareketler.First(x => x.CariHareketId == id).ToCariHareket();
+        hata = null;
+        hareket = hareketler!.First(x => x.CariHareketId == id).ToCariHareket();
         //https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/call-javascript-from-dotnet?view=aspnetcore-6.0
         JS.InvokeVoidAsync("jump", "cariekle");
     }
@@ -211,6 +267,7 @@ else
     private void Yeni()
     {
         hareket = new CariHareket();
+        hata = null;
 
     }
 
@@ -260,55 +317,13 @@ else
                     db.CariHareket.Add(hareket);
                     db.SaveChanges();
                 }
-
             }
-            RefreshList();
+            NTF.Notify(NotificationSeverity.Success, "Başarılı", "Bilgiler kaydedildi");
+            hata = null;
             Yeni();
+            grid?.Reload();
 
         }
 
     }
-
-    private void RefreshList()
-    {
-        using (var db = new DB())
-        {
-            dovizKurlari = db.DovizKuru.AsNoTracking().ToList();
-            dovizKurlari.Insert(0, new DovizKuru() { DovizKuruId = 0, DovizAdi = "TL", DovizCinsi = "TRY" });
-            cariKart =
-            (
-                cariKartIdOnly != null
-                    ? db.CariKart.AsNoTracking().Where(x => x.CariKartId == cariKartIdOnly)
-                    : db.CariKart.AsNoTracking()
-            )
-            // .Include(x => x.Hareketler)
-            .Where(x => x.CariKartId == Id)
-            .FirstOrDefault();
-
-            if (cariKart != null)
-            {
-                hareketler = db.CariHareket
-                    .Where(x => x.CariKartId == cariKart.CariKartId)
-                    .Include(x => x.DovizKuru)
-                    .OrderByDescending(x => x.Tarih)
-                    .ThenBy(x => x.VadeTarihi)
-                    .ThenByDescending(x => x.CariHareketId)
-                    .Select(x => new CariHareketWrapper(x))
-                    .ToList();
-            }
-        }
-        InvokeAsync(() => StateHasChanged());
-
-    }
-
-
-    protected override async Task OnInitializedAsync()
-    {
-        RefreshList();
-    }
-
-    //protected override void OnAfterRender(bool firstRender)
-    //{
-    //    RefreshList();
-    //}
 }
