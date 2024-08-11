@@ -14,7 +14,7 @@
 @if (!string.IsNullOrEmpty(err))
 {
     <div class="row">
-        <RadzenAlert AlertStyle="AlertStyle.Danger" Severity="AlertSeverity.Error" Style="margin-top: 10px">
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Severity="AlertSeverity.Error" Style="margin-top: 10px"  AllowClose="false">
             @err
         </RadzenAlert>
     </div>
