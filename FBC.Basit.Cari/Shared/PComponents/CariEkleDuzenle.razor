@@ -2,21 +2,21 @@
 
 @if (Model != null)
 {
-    <div class=row>
-        <div class="container px-5 my-5">
-            <TextBox @bind-Data="Model.Isim" Title="Cari İsim" />
-            <TextArea @bind-Data="Model.Notlar" Title="Notlar" />
-
-            <div class="d-grid">
-                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="SaveClick">@(Model.CariKartId>0 ? "Kaydet" : "Ekle"  )</button>
-            @if (Model.CariKartId>0) {
-                <button class="btn btn-secondary btn-lg mt-1" id="submitButton" @onclick="CancelClick">Vazgeç</button>
-
-            }
-            </div>
-        </div>
-    </div>
-} else
+    <RadzenCard>
+        <RadzenStack>
+            <RadzenTextBox @bind-Value="Model.Isim" Placeholder="Cari İsim" Title="Cari İsim" />
+            <RadzenTextArea @bind-Value="Model.Notlar" Placeholder="Notlar" Title="Notlar" />
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="SaveClick">@(Model.CariKartId > 0 ? "Kaydet" : "Ekle")</RadzenButton>
+                @if (Model.CariKartId > 0)
+                {
+                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Vazgeç" Click="CancelClick" />
+                }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+}
+else
 {
     <pre>Model Was Here :)</pre>
 }

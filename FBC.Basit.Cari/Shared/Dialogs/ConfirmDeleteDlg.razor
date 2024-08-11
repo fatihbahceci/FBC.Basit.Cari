@@ -1,0 +1,46 @@
+﻿@namespace FBC.Components
+@inject DialogService DLG
+
+<div class="row">
+    <span>
+        Silinecek kaydın ID'sini <span class='btn btn-danger'>@Id</span>  buraya tekrar yazın
+    </span>
+</div>
+<div class="row">
+    <RadzenNumeric @bind-Value=validateId />
+</div>
+
+
+@if (!string.IsNullOrEmpty(err))
+{
+    <div class="row">
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Severity="AlertSeverity.Error" Style="margin-top: 10px">
+            @err
+        </RadzenAlert>
+    </div>
+}
+<div class="row">
+    <div class="col-md-12 text-end">
+        <RadzenButton Click="@((args) => DLG.Close(false))" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Light" Text="Vazgeç" Style="width: 120px" Class="me-1" />
+        <RadzenButton Click="Sil" Variant="Variant.Flat" Text="Sil" Style="width: 120px" />
+    </div>
+</div>
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private int validateId = 0;
+    string? err = null;
+
+    private void Sil()
+    {
+        if (Id == validateId)
+        {
+            DLG.Close(true);
+        }
+        else
+        {
+            err = "ID'ler uyuşmuyor";
+        }
+    }
+
+}

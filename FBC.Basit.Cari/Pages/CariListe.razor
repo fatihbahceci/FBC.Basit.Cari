@@ -2,99 +2,180 @@
 @using Microsoft.EntityFrameworkCore;
 @using FBC.Components
 @inject IJSRuntime JS
+@inject NotificationService NTF
+@inject DialogService DLG
+@inject NavigationManager NAV
 
-<PageTitle>Cari Liste</PageTitle>
 <div id="top" />
+<PageTitle>Cari Liste</PageTitle>
 <AuthorizeView Roles="CanEditData">
     @if (cariKartIdOnly == null)
     {
         <CariEkleDuzenle @bind-Model="cariKart" SaveClick="Kaydet" CancelClick="Vazgec" />
         if (!string.IsNullOrEmpty(cariKartHata))
         {
-            <div class="alert alert-danger" role="alert">
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Severity="AlertSeverity.Error" AllowClose="false">
                 @cariKartHata
-            </div>
+
+            </RadzenAlert>
         }
     }
 </AuthorizeView>
-@if (liste == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    var toplamBorc = liste.Sum(x => x.ReelBorc);
-    var toplamAlacak = liste.Sum(x => x.ReelAlacak);
-    <div class="row">
-        <CheckBox @bind-Data="bakiyesiOlmayanlariGizle" Title="Bakiyesi olmayanları gizle" />
-    </div>
-    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>İsim</th>
-                <th>Borç</th>
-                <th>Alacak</th>
-                <th>Bakiye</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in liste)
-            {
-                if (!bakiyesiOlmayanlariGizle || (bakiyesiOlmayanlariGizle && item.Bakiye != 0))
-                {
-                    bool hasNote = !string.IsNullOrEmpty(item.Notlar);
-                    <tr>
-                        <td rowspan="@(hasNote ? "2" : "")">@item.CariKartId</td>
-                        <td>@item.Isim</td>
-                        <td>@($"₺{item.ReelBorc:n}")</td>
-                        <td>@($"₺{item.ReelAlacak:n}")</td>
-                        <td>@($"₺{item.ReelBakiye:n}")</td>
-                        <td rowspan="@(hasNote ? "2" : "")">
-                            <a href="/cari/goster/@item.CariKartId" class="btn btn-primary">Aç</a>
 
-                            <AuthorizeView Roles="CanEditData">
-                                @if (cariKartIdOnly == null)
-                                {
-                                    <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.CariKartId)">Sil</a>
-                                    <a href="javascript:void();" class="btn btn-secondary" @onclick="() => Duzenle(item)">Düzenle</a>
-                                }
-                            </AuthorizeView>
-                        </td>
-                    </tr>
-                    if (hasNote)
+<CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+
+<RadzenDataGrid @ref="grid"
+                TItem="CariOzet"
+                Data="@liste"
+                Count="@listeTotalCount"
+                LoadData="LoadData"
+                AllowSorting="true"
+                FilterMode="FilterMode.Simple"
+                AllowFiltering="true"
+                AllowColumnPicking="false"
+                AllowPaging="true"
+                PagerHorizontalAlign="HorizontalAlign.Center"
+                PageSizeOptions="new int[]{10,20,50,100,500}"
+                PagerPosition="PagerPosition.TopAndBottom"
+                PageSize="20"
+                ShowPagingSummary="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="CariOzet" Property="CariKartId" Width="100px" Title="Id" Filterable="false" />
+        <RadzenDataGridColumn TItem="CariOzet" Property="Isim" Title="İsim" Filterable="false">
+            <Template Context="item">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    @if (!string.IsNullOrEmpty(item.Notlar))
                     {
-                        <tr>
-                            <td colspan="4">Notlar:     @item.Notlar</td>
-                        </tr>
+                        <RadzenStack Gap="0">
+                            <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">@item.Isim</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-0"><strong>Notlar:</strong> @item.Notlar</RadzenText>
+                        </RadzenStack>
                     }
-                }
-            }
-        </tbody>
-    </table>
-    <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+                    else
+                    {
+                        <RadzenText>@item.Isim</RadzenText>
+                    }
+                </RadzenStack>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CariOzet" Property="ReelBorc" Width="100px" FormatString="{0:C}" Title="Borç" Filterable="false" />
+        <RadzenDataGridColumn TItem="CariOzet" Property="ReelAlacak" Width="100px" FormatString="{0:C}" Title="Alacak" Filterable="false" />
+        <RadzenDataGridColumn TItem="CariOzet" Property="ReelBakiye" Width="100px" FormatString="{0:C}" Title="Bakiye" Filterable="true">
+            <FilterTemplate>
+                <RadzenCheckBox TValue="bool" Change="@BakiyesiOlmayanlariGizle" Text="Bakiyesi olmayanları gizle" Name="CBBG" />
+                <RadzenLabel Text="Bakiye <> 0" Component="CBBG" class="rz-ms-2" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CariOzet" Title="İşlemler" Width="200px" Pickable="false" Filterable="false">
+            <Template Context="item">
+                <RadzenSplitButton Text="Görüntüle" Click="@(s => Act(s?.Value ?? "O" , item.CariKartId))">
+                    <ChildContent>
+                        <RadzenSplitButtonItem Text="Görüntüle" Value="O" />
+                        <AuthorizeView Roles="CanEditData">
+                            @if (cariKartIdOnly == null)
+                            {
+                                <RadzenSplitButtonItem Text="Sil" Value="D" />
+                                <RadzenSplitButtonItem Text="Düzenle" Value="E" />
+                            }
+                        </AuthorizeView>
+                    </ChildContent>
+                </RadzenSplitButton>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
 
-    <AuthorizeView Roles="CanEditData">
-        @if (cariKartIdOnly == null)
-        {
-            <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
-                <Body>
-                    @{
-                        var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-                    }
-                    <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
-                </Body>
-                <Footer>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-                </Footer>
-            </ModalForm>
-        }
-    </AuthorizeView>
-}
+</RadzenDataGrid>
+<CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+
+<AuthorizeView Roles="CanEditData">
+
+</AuthorizeView>
+
 @code {
+    RadzenDataGrid<CariOzet>? grid;
+    private List<CariOzet>? liste;
+    private int listeTotalCount = 0;
+    private decimal toplamBorc = 0;
+    private decimal toplamAlacak = 0;
+    private CariKart cariKart = new CariKart();
+    private string? cariKartHata = null;
+    private bool bakiyesiOlmayanlariGizle;
+
+    [CascadingParameter(Name = "userCariKartId")]
+    private int? cariKartIdOnly { get; set; }
+    private void BakiyesiOlmayanlariGizle(bool paca)
+    {
+        bakiyesiOlmayanlariGizle = paca;
+        grid?.Reload();
+    }
+
+    private async Task Act(string act, int id)
+    {
+        switch (act)
+        {
+            case "O":
+                NAV.NavigateTo($"/cari/goster/{id}");
+                break;
+            case "D":
+                await ShowSilDlg(id);
+                break;
+            case "E":
+                Duzenle(liste!.First(x => x.CariKartId == id));
+                break;
+        }
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        await Task.Yield();
+        try
+        {
+
+            using (var db = new DB())
+            {
+                var all =
+                (
+                    cariKartIdOnly != null
+                        ? db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru).Where(x => x.CariKartId == cariKartIdOnly)//.OrderBy(x=> x.Isim)
+                        : db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru)//.OrderBy(x=> x.Isim)
+                )
+                .ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
+                          // .SelectMany(x => x.Hareketler)
+                          // .Select(x=> new CariHareketWrapper(x))
+                .Select(x =>
+                {
+                    var wh = x.Hareketler.Select(x => new CariHareketWrapper(x)).ToList();
+
+                    var r = new CariOzet()
+                        {
+                            CariKartId = x.CariKartId,
+                            Isim = x.Isim,
+                            Notlar = x.Notlar,
+                            Borc = wh.Sum(x => x.Borc),
+                            Alacak = wh.Sum(x => x.Alacak),
+                            ReelBorc = wh.Sum(x => x.BorcDovizSatis),
+                            ReelAlacak = wh.Sum(x => x.AlacakDovizSatis)
+                        };
+                    return r;
+                }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
+                listeTotalCount = all.Count;
+                toplamBorc = all.Sum(x => x.ReelBorc);
+                toplamAlacak = all.Sum(x => x.ReelAlacak);
+                if (bakiyesiOlmayanlariGizle)
+                {
+                    all = all.Where(x => x.ReelBakiye != 0).ToList();
+                    listeTotalCount = all.Count;
+                }
+                liste = all.Skip(args.Skip ?? 0).Take(args.Top ?? int.MaxValue).ToList();
+            }
+        }
+        catch (Exception exc)
+        {
+            liste = new List<CariOzet>();
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
+    }
 
     class CariOzet
     {
@@ -110,43 +191,37 @@ else
 
     }
 
-    private List<CariOzet>? liste;
-    private CariKart cariKart = new CariKart();
-    private string? cariKartHata = null;
-    private bool bakiyesiOlmayanlariGizle;
-    ModalForm silDlg;
-    private int silinecekId = -1;
-    private int silinecekIdValidate = 0;
-
-    [CascadingParameter(Name = "userCariKartId")]
-    private int? cariKartIdOnly { get; set; }
-
-
-    private void ShowSilDlg(int id)
+    private async Task ShowSilDlg(int id)
     {
-        silinecekId = id;
-        silDlg.Open();
-    }
-
-    private void Sil()
-    {
-        if (silinecekIdValidate == silinecekId)
+        if (cariKartIdOnly != null)
         {
-            using (var db = new DB())
-            {
-                //TODO Kullanıcı ile ilişkilendirilmişse FOREIGN KEY hatası verecektir.
-                var har = db.CariHareket.Where(x => x.CariKartId == silinecekId);
-                db.CariHareket.RemoveRange(har);
-                var kart = db.CariKart.Where(x => x.CariKartId == silinecekId);
-                db.CariKart.RemoveRange(kart);
-                db.SaveChanges();
-            }
-            silinecekId = -1;
-            silinecekIdValidate = 0;
-            silDlg.Close();
-            RefreshList();
+            NTF.Notify(NotificationSeverity.Error, "Hata!", "Yetkiniz yok!");
+            return;
         }
-
+        var r = await DLG.OpenAsync<FBC.Components.ConfirmDeleteDlg>(
+            "Silmek istediğinize emin misiniz?",
+            new Dictionary<string, object> { { "Id", id } });
+        try
+        {
+            if (r is bool b == true)
+            {
+                using (var db = new DB())
+                {
+                    //TODO Kullanıcı ile ilişkilendirilmişse FOREIGN KEY hatası verecektir.
+                    var har = db.CariHareket.Where(x => x.CariKartId == id);
+                    db.CariHareket.RemoveRange(har);
+                    var kart = db.CariKart.Where(x => x.CariKartId == id);
+                    db.CariKart.RemoveRange(kart);
+                    db.SaveChanges();
+                }
+                grid?.Reload();
+                NTF.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt silindi");
+            }
+        }
+        catch (Exception exc)
+        {
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
     }
 
     private void Duzenle(CariOzet ozet)
@@ -180,7 +255,7 @@ else
                     db.SaveChanges();
                     cariKart = new CariKart();
                     cariKartHata = null;
-                    RefreshList();
+                    grid?.Reload();
                 }
                 else
                 {
@@ -196,53 +271,12 @@ else
                 db.SaveChanges();
                 cariKart = new CariKart();
                 cariKartHata = null;
-                RefreshList();
+                grid?.Reload();
             }
         }
     }
 
-    private void RefreshList()
-    {
 
-        using (var db = new DB())
-        {
-            liste =
-            (
-                cariKartIdOnly != null
-                    ? db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru).Where(x => x.CariKartId == cariKartIdOnly)//.OrderBy(x=> x.Isim)
-                    : db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru)//.OrderBy(x=> x.Isim)
-            )
-            .ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
-                      // .SelectMany(x => x.Hareketler)
-                      // .Select(x=> new CariHareketWrapper(x))
-            .Select(x =>
-            {
-                var wh = x.Hareketler.Select(x => new CariHareketWrapper(x)).ToList();
 
-                var r = new CariOzet()
-                    {
-                        CariKartId = x.CariKartId,
-                        Isim = x.Isim,
-                        Notlar = x.Notlar,
-                        Borc = wh.Sum(x => x.Borc),
-                        Alacak = wh.Sum(x => x.Alacak),
-                        ReelBorc = wh.Sum(x => x.BorcDovizSatis),
-                        ReelAlacak = wh.Sum(x => x.AlacakDovizSatis)
-                    };
-                return r;
-            }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
-            InvokeAsync(() => StateHasChanged());
 
-        }
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        RefreshList();
-        //OnInitializedAsync de olurdu önemli değil. (Login sonrası index, refresh edinceye kadar boş geliyor #6) ile alakası yok.
-    }
-    //protected override async Task OnInitializedAsync()
-    //{
-    //    RefreshList();
-    //}
 }
