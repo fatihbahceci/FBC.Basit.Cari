@@ -1,21 +1,20 @@
 ﻿@namespace FBC.Components
- <div class="container px-5 my-5 @ExtraClass">
-            <table class="table">
-                <tr>
-                    <th>Toplam Borç</th>
-                    <td style="text-align: right">@($"₺{ToplamBorc:n}")</td>
-                </tr>
-                <tr>
-                    <th>Toplam Alacak</th>
-                    <td style="text-align: right">@($"₺{ToplamAlacak:n}")</td>
-                </tr>
-                <tr>
-                    <th>Bakiye</th>
-                    <td style="text-align: right">@($"₺{(ToplamAlacak - ToplamBorc):n}")</td>
-                </tr>
-            </table>
-        </div>
-
+<div class="container px-5 my-5 @ExtraClass">
+    <table class="table">
+        <tr>
+            <th>Toplam Borç</th>
+            <td style="text-align: right">@($"{ToplamBorc:c}")</td>
+        </tr>
+        <tr>
+            <th>Toplam Alacak</th>
+            <td style="text-align: right">@($"{ToplamAlacak:c}")</td>
+        </tr>
+        <tr>
+            <th>Bakiye</th>
+            <td style="text-align: right">@($"{(ToplamAlacak - ToplamBorc):c}")</td>
+        </tr>
+    </table>
+</div>
 
 @code {
     [Parameter]
