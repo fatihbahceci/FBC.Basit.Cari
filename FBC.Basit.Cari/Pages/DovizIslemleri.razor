@@ -5,99 +5,94 @@
 @using FBC.Components;
 @using System.Xml
 @inject IJSRuntime JS
+@inject NotificationService NTF
+@inject DialogService DLG
+
 <h3>DovizIslemleri</h3>
 <id id="kullaniciekle" />
 <div class="container px-5 my-5">
     <div class="row">
-        <TextBox @bind-Data="DovizKuru.DovizCinsi" FormPanelExtraClass="col" Title="DovizCinsi" />
-        <TextBox @bind-Data="DovizKuru.DovizAdi" FormPanelExtraClass="col" Title="DovizAdi" />
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+            <RadzenLabel Text="DovizCinsi" />
+            <RadzenTextBox @bind-Value="DovizKuru.DovizCinsi" Placeholder="DovizCinsi" Style="width: 100%" />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+            <RadzenLabel Text="DovizAdi" />
+            <RadzenTextBox @bind-Value="DovizKuru.DovizAdi" Placeholder="DovizAdi" Style="width: 100%" />
+        </RadzenStack>
     </div>
     <div class="row">
-        <TextBox @bind-Data="DovizKuru.GuncelKurAlis" FormPanelExtraClass="col" Title="GuncelKurAlis" />
-        <TextBox @bind-Data="DovizKuru.GuncelKurSatis" FormPanelExtraClass="col" Title="GuncelKurSatis" />
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+            <RadzenLabel Text="GuncelKurAlis" />
+            <RadzenNumeric @bind-Value="DovizKuru.GuncelKurAlis" Title="GuncelKurAlis" Style="width: 100%" />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+            <RadzenLabel Text="GuncelKurSatis" />
+            <RadzenNumeric @bind-Value="DovizKuru.GuncelKurSatis" Title="GuncelKurSatis" Style="width: 100%" />
+        </RadzenStack>
     </div>
 
     <div class="d-grid">
-        @if (DovizKuru.DovizKuruId > 0)
-        {
-            <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
-        }
-        <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(DovizKuru.DovizKuruId > 0 ? "Kaydet" : "Ekle")</button>
-    </div>
-    @*     <div>
-    <small class="text-muted">Son güncelleme: @DovizKuru.GuncellemeTarihi</small>
-    </div> *@
-    <div class="row">
-        <CheckBox @bind-Data="merkezBankasindanOlmayanlaridaGetir" Title="Eğer döviz kayıtlı değilse yeni kayıt oluştur" />
-    </div>
-    <div class="d-grid">
-        <button class="btn btn-success btn-lg" @onclick="MerkezBankasindanAl">İnternet'ten güncelle</button>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
+
+            @if (DovizKuru.DovizKuruId > 0)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="Yeni" >Yeni</RadzenButton>
+            }
+            <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="Kaydet">@(DovizKuru.DovizKuruId > 0 ? "Kaydet" : "Ekle")</RadzenButton>
+            <RadzenCheckBox TValue="bool" Change="MerkezBankasindanOlmayanlariDaGetir" Name="Dilruba" />
+            <RadzenLabel Text="Eğer döviz kayıtlı değilse yeni kayıt oluştur" Component="Dilruba"  />
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="MerkezBankasindanAl">İnternet'ten güncelle</RadzenButton>
+        </RadzenStack>
     </div>
     @if (!string.IsNullOrEmpty(hata))
     {
-        <div class="alert alert-danger" role="alert">
+        <RadzenAlert Severity="AlertSeverity.Warning" AlertStyle="AlertStyle.Danger" AllowClose="false">
             @hata
-        </div>
+        </RadzenAlert>
     }
 </div>
 @if (DovizKurlari != null && DovizKurlari.Any())
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>DovizCinsi</th>
-                <th>DovizAdi</th>
-                <th>GuncelKurAlis</th>
-                <th>GuncelKurSatis</th>
-                <th>GuncellemeTarihi</th>
+    <RadzenDataList Data="DovizKurlari">
+        <Template Context="x">
+            <RadzenRow>
+                <RadzenColumn>
+                    <RadzenLabel Text="@(""+ x.DovizKuruId)" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenLabel Text="@x.DovizCinsi" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenLabel Text="@x.DovizAdi" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenLabel Text="Alış" />
+                    <RadzenLabel Text="@(string.Format("{0:C}", x.GuncelKurAlis))" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenLabel Text="Satış" />
+                    <RadzenLabel Text="@(string.Format("{0:C}", +x.GuncelKurSatis))" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenLabel Text="Güncelleme" />
+                    <RadzenLabel Text="@(""+x.GuncellemeTarihi)" />
+                </RadzenColumn>
                 <AuthorizeView Roles="Admin">
-                    <th class="d-print-none">İşlemler</th>
+                    <RadzenColumn>
+                        <RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Düzenle" Click="() => Duzenle(x.DovizKuruId)" />
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Text="Sil" Click="() => ShowSilDlg(x.DovizKuruId)" />
+                    </RadzenColumn>
                 </AuthorizeView>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in DovizKurlari)
-            {
-                <tr>
-                    <td>@item.DovizKuruId</td>
-                    <td>@item.DovizCinsi</td>
-                    <td>@item.DovizAdi</td>
-                    <td>@item.GuncelKurAlis</td>
-                    <td>@item.GuncelKurSatis</td>
-                    <td>@item.GuncellemeTarihi</td>
-                    <AuthorizeView Roles="Admin">
-                        <td class="d-print-none">
-                            <button class="btn btn-primary" @onclick="()=> Duzenle(item.DovizKuruId)">Düzenle</button>
-                            <a href="javascript:void();" class="btn btn-danger" @onclick="() => ShowSilDlg(item.DovizKuruId)">Sil</a>
-                        </td>
-                    </AuthorizeView>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <AuthorizeView Roles="CanEditData">
-        <ModalForm @ref="silDlg" Title="Silme işlemini onayla">
-            <Body>
-                @{
-                    var titleText = $"Silinecek Kaydın ID'sini <span class='btn btn-danger'>{silinecekId}</span> buraya tekrar yazın";
-                }
-                <TextBox @bind-Data="silinecekIdValidate" Title="@titleText" />
-            </Body>
-            <Footer>
-                <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-            </Footer>
-        </ModalForm>
-    </AuthorizeView>
-
+            </RadzenRow>
+        </Template>
+    </RadzenDataList>
 }
 else
 {
-    <div class="alert alert-warning" role="alert">
+    <RadzenAlert Severity="AlertSeverity.Warning" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @(ozelMesaj ?? "Kayıt bulunamadı!")
-    </div>
-
+    </RadzenAlert>
 }
 
 @code {
@@ -105,7 +100,12 @@ else
     private DovizKuru DovizKuru { get; set; } = new DovizKuru();
     private string? hata;
     private string? ozelMesaj = null;
-    private bool merkezBankasindanOlmayanlaridaGetir = false;
+    private bool merkezBankasindanOlmayanlariDaGetir = false;
+    private void MerkezBankasindanOlmayanlariDaGetir(bool paca)
+    {
+        merkezBankasindanOlmayanlariDaGetir = paca;
+        // grid?.Reload();
+    }
     #region Kullanıcıları Listele
 
     private void RefreshList()
@@ -129,44 +129,48 @@ else
     #endregion
 
     #region Sil
-    ModalForm silDlg;
-    private int silinecekId = -1;
-    private int silinecekIdValidate = 0;
 
-    private void ShowSilDlg(int id)
+    private async Task ShowSilDlg(int id)
     {
         hata = null;
-        silinecekId = id;
-        silDlg.Open();
-    }
-
-    private void Sil()
-    {
-        if (silinecekIdValidate == silinecekId)
+        var r = await DLG.OpenAsync<FBC.Components.ConfirmDeleteDlg>(
+            "Silmek istediğinize emin misiniz?",
+            new Dictionary<string, object> { { "Id", id } });
+        try
         {
-            using (var db = new DB())
+            if (r is bool b && b == true)
             {
-                var hasTransaction = db.CariHareket.Where(x => x.DovizKuruId == silinecekId).Any();
-                if (hasTransaction)
+
+                using (var db = new DB())
                 {
-                    hata = "Bu döviz ile işlem yapılmış. Silinemez!";
-                }
-                else
-                {
-                    var exists = db.DovizKuru.FirstOrDefault(x => x.DovizKuruId == silinecekId);
-                    if (exists != null)
+                    var hasTransaction = db.CariHareket.Where(x => x.DovizKuruId == id).Any();
+                    if (hasTransaction)
                     {
-                        db.DovizKuru.Remove(exists);
-                        db.SaveChanges();
-                        silinecekId = -1;
-                        silinecekIdValidate = 0;
-                        silDlg.Close();
-                        RefreshList();
+                        hata = "Bu döviz ile işlem yapılmış. Silinemez!";
+                    }
+                    else
+                    {
+                        var exists = db.DovizKuru.FirstOrDefault(x => x.DovizKuruId == id);
+                        if (exists != null)
+                        {
+                            db.DovizKuru.Remove(exists);
+                            db.SaveChanges();
+                            NTF.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt silindi");
+                            hata = null;
+                            RefreshList();
+                        }
+                        else
+                        {
+                            hata = "Kayıt bulunamadı!";
+                        }
                     }
                 }
             }
         }
-
+        catch (Exception exc)
+        {
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
     }
 
     #endregion
@@ -175,6 +179,7 @@ else
 
     private void Duzenle(int id)
     {
+        hata = null;
         using (var db = new DB())
         {
             DovizKuru = db.DovizKuru.AsNoTracking()
@@ -186,6 +191,7 @@ else
 
     private void Yeni()
     {
+        hata = null;
         DovizKuru = new DovizKuru();
     }
 
@@ -303,7 +309,7 @@ else
                     db.SaveChanges();
                     HareketiDeKaydet(db, exists, source);
                 }
-                else if (merkezBankasindanOlmayanlaridaGetir)
+                else if (merkezBankasindanOlmayanlariDaGetir)
                 {
                     var nw = new DovizKuru
                         {

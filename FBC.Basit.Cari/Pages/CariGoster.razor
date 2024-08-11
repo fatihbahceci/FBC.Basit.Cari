@@ -235,7 +235,7 @@ else
             new Dictionary<string, object> { { "Id", id } });
         try
         {
-            if (r is bool b == true)
+            if (r is bool b && b == true)
             {
                 using (var db = new DB())
                 {
