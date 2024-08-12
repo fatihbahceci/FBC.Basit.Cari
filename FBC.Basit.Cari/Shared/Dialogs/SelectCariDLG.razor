@@ -1,0 +1,43 @@
+﻿@namespace FBC.Components
+@using Microsoft.EntityFrameworkCore
+@inject DialogService DLG
+
+<RadzenStack Gap="1rem" Orientation="Orientation.Vertical" JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
+
+    <RadzenDataGrid @ref="grid"
+                    TItem="CariKart"
+                    Data="@cariList"
+                    AllowFiltering="true"
+                    AllowPaging="true"
+                    PageSize="7"
+                    AllowSorting="true"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    FilterMode="FilterMode.Simple">
+        <Columns>
+            <RadzenDataGridColumn TItem="CariKart" Property="CariKartId" Title="Id" Width="100px" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariKart" Property="Isim" Title="İsim" Filterable="true" />
+            <RadzenDataGridColumn Width="100px" Title="Seç">
+                <Template Context="item">
+                    <RadzenButton Text="Seç" Click="@((args) => DLG.Close(item))"/>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Click="@((args) => DLG.Close(true))" Variant="Variant.Flat" Text="Close" Style="width: 120px" />
+    </RadzenStack>
+</RadzenStack>
+@code {
+    RadzenDataGrid<CariKart> grid;
+    List<CariKart> cariList = new List<CariKart>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using (var db = new DB())
+        {
+            cariList = db.CariKart.AsNoTracking().ToList();
+        }
+        await Task.CompletedTask;
+    }
+
+}
