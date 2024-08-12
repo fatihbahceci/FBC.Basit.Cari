@@ -6,6 +6,8 @@
 @using FBC.Components;
 
 @inject IJSRuntime JS
+@inject NotificationService NTF
+@inject DialogService DLG
 
 <PageTitle>Users</PageTitle>
 <h1 id="kullaniciekle">Users</h1>
@@ -32,7 +34,7 @@
         {
             <button class="btn alert-secondary btn-lg py-1" id="submitButton" @onclick="Yeni">Yeni</button>
         }
-        <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(user.SysUserId>0 ?"Kaydet":"Ekle")</button>
+        <button class="btn btn-primary btn-lg" id="submitButton" @onclick="Kaydet">@(user.SysUserId > 0 ? "Kaydet" : "Ekle")</button>
     </div>
     @if (!string.IsNullOrEmpty(hata))
     {
@@ -62,7 +64,7 @@
                         <span class="form-control">Bağlı Cari: @item.CariKart?.Isim</span>
                         <div class="row">
                             <button class="col m-1 btn btn-primary" @onclick="()=> Duzenle(item.SysUserId)">Düzenle</button>
-                            <a class="col m-1 btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)" href="javascript:void();" >Sil</a>
+                            <a class="col m-1 btn btn-danger" @onclick="() => ShowSilDlg(item.SysUserId)" href="javascript:void();">Sil</a>
                         </div>
                     </div>
                 </div>
@@ -87,49 +89,7 @@
             <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
         </Footer>
     </ModalForm>
-
-
-    <ModalForm @ref="cariSecDlg" Title="Cari Seç">
-        <Body>
-            @if (cariyeler_hehehe?.Any() == true)
-            {
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>SysUserId</th>
-                            <th>SysUserName</th>
-                            <th>Seç</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in cariyeler_hehehe)
-                        {
-                            <tr>
-                                <td>@item.CariKartId</td>
-                                <td>@item.Isim</td>
-                                <td>
-                                    <button class="btn btn-primary" @onclick="()=> CariSec(item.CariKartId, item.Isim)">Seç</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="alert alert-danger" role="alert">
-                    Hiç cari kart oluşturulmamış.
-                </div>
-            }
-
-        </Body>
-        <Footer>
-            <button type="button" class="btn btn-danger" data-dismiss="modal" @onclick="Sil">Sil</button>
-        </Footer>
-    </ModalForm>
 }
-
-
 
 @*https://www.meziantou.net/anchor-navigation-in-a-blazor-application.htm*@
 
@@ -324,37 +284,25 @@
     #endregion
 
     #region Cari Seç
-    private List<CariKart> cariyeler_hehehe;
-    ModalForm cariSecDlg;
     string? seciliCariIsim;
 
-    private void CariSecGoster()
+    private async Task CariSecGoster()
     {
-        using (var db = new DB())
+        var r = await DLG.OpenAsync<SelectCariDLG>("Cari Seç");
+        try
         {
-            cariyeler_hehehe = db.CariKart.AsNoTracking().ToList();
+            if (r is CariKart b && b != null)
+            {
+                seciliCariIsim = b.Isim;
+                user.CariKartId = b.CariKartId;
+            }
         }
-        hata = null;
-        cariSecDlg.Open();
+        catch (Exception exc)
+        {
+            NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
+        }
 
-    }
-
-    private void CariSec(int carikarId, string isim)
-    {
-        seciliCariIsim = isim;
-        user.CariKartId = carikarId;
-        cariSecDlg.Close();
     }
     #endregion
-
-
-
-
-
-
-
-
-
-
 
 }
