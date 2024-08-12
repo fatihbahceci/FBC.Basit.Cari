@@ -4,48 +4,55 @@
 @inject NavigationManager Navi
 
 @page "/Login"
-<div class=row>
+<RadzenRow Gap="0" class="rz-my-12 rz-mx-auto rz-border-radius-6 rz-shadow-10" Style="width: 100%; max-width: 800px; overflow: hidden;">
 
-    <div class="container px-5 my-5">
-        <TextBox @bind-Data="userName" Title="Kullanıcı Adı" KeyPressed="InputKeyPressed" />
-        <TextBox @bind-Data="password" Title="Parola" IsPassword="true" KeyPressed="InputKeyPressed" />
-        @if (!trying)
-        {
-            <div class="d-grid">
-                <button class="btn btn-primary btn-lg" id="submitButton" @onclick="TryLogin">Giriş</button>
-            </div>
-        }
-    </div>
-    @if (!string.IsNullOrEmpty(loginMessage))
-    {
-        <div class="alert alert-danger" role="alert">
-            @loginMessage
-        </div>
-    }
-</div>
+    <RadzenColumn Size="12" SizeMD="6">
+        <RadzenCard class="rz-shadow-0 rz-border-radius-0 rz-text-align-center rz-p-12" Style="height: 100%; background: linear-gradient(to bottom, #4f4f4f, #ffffff);">
+            <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H2" class="rz-color-white rz-mb-6">FBC</RadzenText>
+            <RadzenText TextStyle="TextStyle.H6" class="rz-color-white">Basit Cari</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-white">
+                <RadzenLink Path="https://github.com/fatihbahceci/FBC.Basit.Cari" Text="Github" Icon="public" Target="_blank" />
+            </RadzenText>
+        </RadzenCard>
+    </RadzenColumn>
+    <RadzenColumn Size="12" SizeMD="6">
+        <RadzenCard class="rz-shadow-0 rz-border-radius-0 rz-p-12">
+            <RadzenTemplateForm Data=@("LoginWithDefaultValues")>
+                <RadzenLogin AllowRegister="false" AllowResetPassword="false" Username=@userName Password=@password
+                             AllowRememberMe="false" RememberMe="@rememberMe"
+                             Login=@(args => OnLogin(args, "Login with default values"))
+                             ResetPassword=@(args => OnResetPassword(args, "Login with default values"))
+                             Register=@(args => OnRegister("Login with default values"))
+                             LoginText="Giriş"
+                             PasswordText="Parola"
+                             UserText="Kullanıcı Adı" />
+            </RadzenTemplateForm>
+        </RadzenCard>
+    </RadzenColumn>
+</RadzenRow>
+ @if (!string.IsNullOrEmpty(loginMessage))
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Severity="AlertSeverity.Error" AllowClose="false">
+        @loginMessage
+    </RadzenAlert>
+}
 
 @code {
 
     string userName;
     string password;
     string loginMessage;
+    bool rememberMe = true;
     bool trying = false;
-    void InputKeyPressed(KeyboardEventArgs e)
-    {
-        if (e.Code == "Enter" || e.Code == "NumpadEnter")
-        {
-            TryLogin();
-        }
-    }
 
-    void TryLogin()
+    void OnLogin(LoginArgs args, string name)
     {
-
+        //console.Log($"{name} -> Username: {args.Username}, password: {args.Password}, remember me: {args.RememberMe}");
         try
         {
             trying = true;
             InvokeAsync(() => StateHasChanged());
-            if ((mgr as FBCSessionedAuthenticationStateProvider).Login(userName, password))
+            if ((mgr as FBCSessionedAuthenticationStateProvider).Login(args.Username, args.Password))
             {
                 Navi.NavigateTo("/");
             }
@@ -62,7 +69,17 @@
         {
             trying = false;
             InvokeAsync(() => StateHasChanged());
-
         }
     }
+
+    void OnRegister(string name)
+    {
+        // console.Log($"{name} -> Register");
+    }
+
+    void OnResetPassword(string value, string name)
+    {
+        // console.Log($"{name} -> ResetPassword for user: {value}");
+    }
+
 }
