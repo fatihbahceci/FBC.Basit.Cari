@@ -72,7 +72,7 @@ namespace FBC.Basit.Cari.DBModels
                             IsAdmin = true,
                             Name = "System",
                             Surname = "Admin",
-                            IsCanEditData = false
+                            IsCanEditData = true
                         });
                         db.SaveChanges();
                     }

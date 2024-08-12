@@ -108,8 +108,40 @@ else
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="CariHareketId" Width="100px" Title="Id" Filterable="false" />
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Tarih" FormatString="{0:d}" Width="100px" Title="Tarih" Filterable="false" />
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Aciklama" Title="Aciklama" Filterable="false" />
-            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Borc" Width="100px" FormatString="{0:C}" Title="Borc" Filterable="false" />
-            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Alacak" Width="100px" FormatString="{0:C}" Title="Alacak" Filterable="false" />
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Borc" Width="100px" FormatString="{0:C}" Title="Borc" Filterable="false">
+                <Template Context="item">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        @if (item.DovizKuruId != null && item.Borc>0)
+                        {
+                            <RadzenStack Gap="0">
+                                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">@($"{item.BorcDovizSatis:C}")</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-0"><strong>@item.DovizCinsi:</strong> @item.Borc</RadzenText>
+                            </RadzenStack>
+                        }
+                        else
+                        {
+                            <RadzenText>@item.Borc</RadzenText>
+                        }
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Alacak" Width="100px" FormatString="{0:C}" Title="Alacak" Filterable="false" >
+                <Template Context="item">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        @if (item.DovizKuruId != null && item.Alacak > 0)
+                        {
+                            <RadzenStack Gap="0">
+                                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">@($"{item.AlacakDovizSatis:C}")</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-0"><strong>@item.DovizCinsi:</strong> @item.Alacak</RadzenText>
+                            </RadzenStack>
+                        }
+                        else
+                        {
+                            <RadzenText>@item.Alacak</RadzenText>
+                        }
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="VadeTarihi" FormatString="{0:d}" Width="100px" Title="VadeTarihi" Filterable="false" />
             <AuthorizeView Roles="CanEditData">
                 <RadzenDataGridColumn TItem="CariHareketWrapper" Title="İşlemler" Width="200px" Pickable="false" Filterable="false">
