@@ -86,6 +86,28 @@
 
 </RadzenDataGrid>
 <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
+@{
+    var totalForeignCurrency = liste?.SelectMany(x => x.Dovizler).GroupBy(x => x.DovizTuru).Select(x => new DovizSum() { 
+            DovizTuru = x.Key, 
+            DovizAdi = x.FirstOrDefault()?.DovizAdi ?? "ERROR",
+            Borc = x.Sum(x => x.Borc), 
+            Alacak = x.Sum(x => x.Alacak) }).ToList();
+    if (totalForeignCurrency != null && totalForeignCurrency.Count > 0)
+    {
+        <RadzenCard>
+            <h3 class="rz-mb-0">Döviz Bazlı Özet</h3>
+            <RadzenDataGrid TItem="DovizSum" Data="@totalForeignCurrency" AllowSorting="true" AllowFiltering="true" AllowPaging="false">
+                <Columns>
+                    <RadzenDataGridColumn TItem="DovizSum" Property="DovizTuru" Title="Döviz Türü" />
+                    <RadzenDataGridColumn TItem="DovizSum" Property="DovizAdi" Title="Döviz Adı" />
+                    <RadzenDataGridColumn TItem="DovizSum" Property="Borc" Title="Borç" FormatString="{0:N}" />
+                    <RadzenDataGridColumn TItem="DovizSum" Property="Alacak" Title="Alacak" FormatString="{0:N}" />
+                    <RadzenDataGridColumn TItem="DovizSum" Property="Bakiye" Title="Bakiye" FormatString="{0:N}" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+}
 
 @code {
     RadzenDataGrid<CariOzet>? grid;
@@ -150,7 +172,14 @@
                             Borc = wh.Sum(x => x.Borc),
                             Alacak = wh.Sum(x => x.Alacak),
                             ReelBorc = wh.Sum(x => x.BorcDovizSatis),
-                            ReelAlacak = wh.Sum(x => x.AlacakDovizSatis)
+                            ReelAlacak = wh.Sum(x => x.AlacakDovizSatis),
+                            Dovizler = wh.GroupBy(x => x.DovizCinsi).Select(x => new DovizSum()
+                            {
+                                DovizTuru = x.Key,
+                                DovizAdi = x.FirstOrDefault()?.DovizAdi ?? "ERROR",
+                                Borc = x.Sum(x => x.Borc),
+                                Alacak = x.Sum(x => x.Alacak)
+                            }).ToList()
                         };
                     return r;
                 }).OrderByDescending(p => p.Bakiye).ThenBy(p => p.Isim).ToList();
@@ -171,7 +200,14 @@
             NTF.Notify(NotificationSeverity.Error, "Hata!", exc.Message);
         }
     }
-
+    class DovizSum
+    {
+        public string DovizTuru { get; set; }
+        public string DovizAdi { get; set; }
+        public decimal Borc { get; set; }
+        public decimal Alacak { get; set; }
+        public decimal Bakiye { get => Alacak - Borc; }
+    }
     class CariOzet
     {
         public int CariKartId { get; set; }
@@ -183,7 +219,8 @@
         public decimal ReelBorc { get; set; }
         public decimal ReelAlacak { get; set; }
         public decimal ReelBakiye { get => ReelAlacak - ReelBorc; }
-
+        public string? DovizTuru { get; set; }
+        public List<DovizSum> Dovizler { get; set; }
     }
 
     private async Task ShowSilDlg(int id)
