@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Microsoft.EntityFrameworkCore;
-@using FBC.Components
+@using FBC.Components;
+@using System.Linq.Dynamic.Core;
 @inject IJSRuntime JS
 @inject NotificationService NTF
 @inject DialogService DLG
@@ -25,20 +26,20 @@
 <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
 <RadzenDataGrid @ref="grid"
-                TItem="CariOzet"
-                Data="@liste"
-                Count="@listeTotalCount"
-                LoadData="LoadData"
-                AllowSorting="true"
-                FilterMode="FilterMode.Simple"
-                AllowFiltering="true"
-                AllowColumnPicking="false"
-                AllowPaging="true"
-                PagerHorizontalAlign="HorizontalAlign.Center"
-                PageSizeOptions="new int[]{10,20,50,100,500}"
-                PagerPosition="PagerPosition.TopAndBottom"
-                PageSize="20"
-                ShowPagingSummary="true">
+TItem="CariOzet"
+Data="@liste"
+Count="@listeTotalCount"
+LoadData="LoadData"
+AllowSorting="true"
+FilterMode="FilterMode.Simple"
+AllowFiltering="true"
+AllowColumnPicking="false"
+AllowPaging="true"
+PagerHorizontalAlign="HorizontalAlign.Center"
+PageSizeOptions="new int[]{10,20,50,100,500}"
+PagerPosition="PagerPosition.TopAndBottom"
+PageSize="20"
+ShowPagingSummary="true">
     <Columns>
         <RadzenDataGridColumn TItem="CariOzet" Property="CariKartId" Width="100px" Title="Id" Filterable="false" />
         <RadzenDataGridColumn TItem="CariOzet" Property="Isim" Title="İsim" Filterable="false">
@@ -58,12 +59,18 @@
                 </RadzenStack>
             </Template>
         </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CariOzet" Property="Aktif" Width="100px" Title="Aktif" Filterable="true" Sortable="false">
+            <FilterTemplate>
+                <RadzenCheckBox TValue="bool" Change="@SadeceAktifleriHesabaDahilEt" Name="AOHDM" Value="sadeceAktifleriHesabaDahilEt" />
+                <RadzenLabel Text="Aktif" Component="AOHDM" class="rz-ms-2" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="CariOzet" Property="ReelBorc" Width="100px" FormatString="{0:C}" Title="Borç" Filterable="false" />
         <RadzenDataGridColumn TItem="CariOzet" Property="ReelAlacak" Width="100px" FormatString="{0:C}" Title="Alacak" Filterable="false" />
         <RadzenDataGridColumn TItem="CariOzet" Property="ReelBakiye" Width="100px" FormatString="{0:C}" Title="Bakiye" Filterable="true">
             <FilterTemplate>
-                <RadzenCheckBox TValue="bool" Change="@BakiyesiOlmayanlariGizle" Text="Bakiyesi olmayanları gizle" Name="CBBG" />
-                <RadzenLabel Text="Bakiye <> 0" Component="CBBG" class="rz-ms-2" />
+                <RadzenCheckBox TValue="bool" Change="@BakiyesiOlmayanlariGizle" Name="CBBG" />
+                <RadzenLabel Text="Bakiyeli" Component="CBBG" class="rz-ms-2" />
             </FilterTemplate>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="CariOzet" Title="İşlemler" Width="200px" Pickable="false" Filterable="false">
@@ -118,6 +125,7 @@
     private CariKart cariKart = new CariKart();
     private string? cariKartHata = null;
     private bool bakiyesiOlmayanlariGizle;
+    private bool sadeceAktifleriHesabaDahilEt = true;
 
     [CascadingParameter(Name = "userCariKartId")]
     private int? cariKartIdOnly { get; set; }
@@ -126,7 +134,11 @@
         bakiyesiOlmayanlariGizle = paca;
         grid?.Reload();
     }
-
+    private void SadeceAktifleriHesabaDahilEt(bool paca)
+    {
+        sadeceAktifleriHesabaDahilEt = paca;
+        grid?.Reload();
+    }
     private async Task Act(string act, int id)
     {
         switch (act)
@@ -151,15 +163,19 @@
 
             using (var db = new DB())
             {
-                var all =
-                (
-                    cariKartIdOnly != null
+                var query =
+                 cariKartIdOnly != null
                         ? db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru).Where(x => x.CariKartId == cariKartIdOnly)//.OrderBy(x=> x.Isim)
                         : db.CariKart.AsNoTracking().Include(p => p.Hareketler).ThenInclude(p => p.DovizKuru)//.OrderBy(x=> x.Isim)
-                )
-                .ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
-                          // .SelectMany(x => x.Hareketler)
-                          // .Select(x=> new CariHareketWrapper(x))
+                        ;
+                if (sadeceAktifleriHesabaDahilEt) {
+                    query = query.Where(x => x.Aktif == true);
+                }
+
+                var all =
+                query.ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
+                               // .SelectMany(x => x.Hareketler)
+                               // .Select(x=> new CariHareketWrapper(x))
                 .Select(x =>
                 {
                     var wh = x.Hareketler.Select(x => new CariHareketWrapper(x)).ToList();
@@ -169,6 +185,7 @@
                             CariKartId = x.CariKartId,
                             Isim = x.Isim,
                             Notlar = x.Notlar,
+                            Aktif = x.Aktif,
                             Borc = wh.Sum(x => x.Borc),
                             Alacak = wh.Sum(x => x.Alacak),
                             ReelBorc = wh.Sum(x => x.BorcDovizSatis),
@@ -191,7 +208,12 @@
                     all = all.Where(x => x.ReelBakiye != 0).ToList();
                     listeTotalCount = all.Count;
                 }
+               
                 liste = all.Skip(args.Skip ?? 0).Take(args.Top ?? int.MaxValue).ToList();
+                if (!string.IsNullOrEmpty(args.OrderBy))
+                {
+                    liste = liste.AsQueryable().OrderBy(args.OrderBy).ToList();
+                };
             }
         }
         catch (Exception exc)
@@ -213,6 +235,7 @@
         public int CariKartId { get; set; }
         public string Isim { get; set; }
         public string? Notlar { get; set; }
+        public bool Aktif { get; set; }
         public decimal Borc { get; set; }
         public decimal Alacak { get; set; }
         public decimal Bakiye { get => Alacak - Borc; }
@@ -258,7 +281,7 @@
 
     private void Duzenle(CariOzet ozet)
     {
-        cariKart = new CariKart() { CariKartId = ozet.CariKartId, Isim = ozet.Isim, Notlar = ozet.Notlar };
+        cariKart = new CariKart() { CariKartId = ozet.CariKartId, Isim = ozet.Isim, Notlar = ozet.Notlar , Aktif = ozet.Aktif};
         JS.InvokeVoidAsync("jump", "top");
     }
 
@@ -284,6 +307,7 @@
                 {
                     exists.Isim = cariKart.Isim;
                     exists.Notlar = cariKart.Notlar;
+                    exists.Aktif = cariKart.Aktif;
                     db.SaveChanges();
                     cariKart = new CariKart();
                     cariKartHata = null;

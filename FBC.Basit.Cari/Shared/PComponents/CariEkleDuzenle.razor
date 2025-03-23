@@ -2,10 +2,15 @@
 
 @if (Model != null)
 {
+    @* if (Model.CariKartId <= 0) Model.Aktif = true; *@
     <RadzenCard>
         <RadzenStack>
             <RadzenTextBox @bind-Value="Model.Isim" Placeholder="Cari İsim" Title="Cari İsim" />
             <RadzenTextArea @bind-Value="Model.Notlar" Placeholder="Notlar" Title="Notlar" />
+            <RadzenRow>
+                <RadzenCheckBox @bind-Value="Model.Aktif" Text="Aktif" Name="ModelAktif" />
+                <RadzenLabel Component="ModelAktif">Aktif</RadzenLabel>
+            </RadzenRow>
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="SaveClick">@(Model.CariKartId > 0 ? "Kaydet" : "Ekle")</RadzenButton>
                 @if (Model.CariKartId > 0)
