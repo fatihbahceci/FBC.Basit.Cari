@@ -57,11 +57,11 @@ else
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Left" AlignItems="AlignItems.Center" Gap="0.5rem" class="col">
                     <RadzenLabel Text="Döviz Kuru" Style="width: 25%" />
                     <RadzenDropDown @bind-Value="hareket.DovizKuruId"
-                                    Data="@dovizKurlari"
-                                    ValueProperty="@nameof(DovizKuru.DovizKuruId)"
-                                    TextProperty="@nameof(DovizKuru.DovizAdi)"
-                                    Style="width: 75%"
-                                    Title="Döviz Kuru">
+                    Data="@dovizKurlari"
+                    ValueProperty="@nameof(DovizKuru.DovizKuruId)"
+                    TextProperty="@nameof(DovizKuru.DovizAdi)"
+                    Style="width: 75%"
+                    Title="Döviz Kuru">
                         <Template Context="x">
                             @((x as DovizKuru)!.DovizAdi) (@((x as DovizKuru)!.DovizCinsi))
                         </Template>
@@ -90,20 +90,20 @@ else
     <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 
     <RadzenDataGrid @ref="grid"
-                    TItem="CariHareketWrapper"
-                    Data="@hareketler"
-                    Count="@listeTotalCount"
-                    LoadData="LoadData"
-                    AllowSorting="true"
-                    FilterMode="FilterMode.Simple"
-                    AllowFiltering="true"
-                    AllowColumnPicking="false"
-                    AllowPaging="true"
-                    PagerHorizontalAlign="HorizontalAlign.Center"
-                    PageSizeOptions="new int[]{10,20,50,100,500}"
-                    PagerPosition="PagerPosition.TopAndBottom"
-                    PageSize="20"
-                    ShowPagingSummary="true">
+    TItem="CariHareketWrapper"
+    Data="@hareketler"
+    Count="@listeTotalCount"
+    LoadData="LoadData"
+    AllowSorting="true"
+    FilterMode="FilterMode.Simple"
+    AllowFiltering="true"
+    AllowColumnPicking="false"
+    AllowPaging="true"
+    PagerHorizontalAlign="HorizontalAlign.Center"
+    PageSizeOptions="new int[]{10,20,50,100,500}"
+    PagerPosition="PagerPosition.TopAndBottom"
+    PageSize="20"
+    ShowPagingSummary="true">
         <Columns>
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="CariHareketId" Width="100px" Title="Id" Filterable="false" />
             <RadzenDataGridColumn TItem="CariHareketWrapper" Property="Tarih" FormatString="{0:d}" Width="100px" Title="Tarih" Filterable="false" />
@@ -324,6 +324,11 @@ else
         }
         else
         {
+            if (hareket.DovizKuruId <=0)
+            {
+                hareket.DovizKuruId = null;
+                hareket.DovizKuru = null;
+            }
             if (hareket.CariHareketId > 0)
             {
                 hareket.CariKartId = cariKart.CariKartId;
