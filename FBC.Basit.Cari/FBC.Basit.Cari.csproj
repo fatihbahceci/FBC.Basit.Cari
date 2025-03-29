@@ -58,6 +58,7 @@ yyyy.MM.dd-Version-Author
 FBC.Basit.Cari
 ******************************
 2025.03.29-0.0.3.17-[FatihB] 
+	[BG]Döviz Bazlı Özet alınırken sadece görünen kayıtlar alınıyor. #23
     [BG] Foreign key error on TRY currency selected #25
 2025.03.24-0.0.3.16-[FatihB] 
     [EN] Cari Hesaplar için order by eklendi

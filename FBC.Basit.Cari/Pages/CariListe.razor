@@ -94,11 +94,6 @@ ShowPagingSummary="true">
 </RadzenDataGrid>
 <CariOzet @bind-ToplamBorc="toplamBorc" @bind-ToplamAlacak="toplamAlacak" />
 @{
-    var totalForeignCurrency = liste?.SelectMany(x => x.Dovizler).GroupBy(x => x.DovizTuru).Select(x => new DovizSum() { 
-            DovizTuru = x.Key, 
-            DovizAdi = x.FirstOrDefault()?.DovizAdi ?? "ERROR",
-            Borc = x.Sum(x => x.Borc), 
-            Alacak = x.Sum(x => x.Alacak) }).ToList();
     if (totalForeignCurrency != null && totalForeignCurrency.Count > 0)
     {
         <RadzenCard>
@@ -119,6 +114,7 @@ ShowPagingSummary="true">
 @code {
     RadzenDataGrid<CariOzet>? grid;
     private List<CariOzet>? liste;
+    private List<DovizSum>? totalForeignCurrency;
     private int listeTotalCount = 0;
     private decimal toplamBorc = 0;
     private decimal toplamAlacak = 0;
@@ -176,6 +172,7 @@ ShowPagingSummary="true">
                 query.ToList() // NotSupportedException: SQLite cannot apply aggregate operator 'Sum' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.
                                // .SelectMany(x => x.Hareketler)
                                // .Select(x=> new CariHareketWrapper(x))
+
                 .Select(x =>
                 {
                     var wh = x.Hareketler.Select(x => new CariHareketWrapper(x)).ToList();
@@ -203,6 +200,15 @@ ShowPagingSummary="true">
                 listeTotalCount = all.Count;
                 toplamBorc = all.Sum(x => x.ReelBorc);
                 toplamAlacak = all.Sum(x => x.ReelAlacak);
+
+                totalForeignCurrency = all?.SelectMany(x => x.Dovizler).GroupBy(x => x.DovizTuru).Select(x => new DovizSum()
+                    {
+                        DovizTuru = x.Key,
+                        DovizAdi = x.FirstOrDefault()?.DovizAdi ?? "ERROR",
+                        Borc = x.Sum(x => x.Borc),
+                        Alacak = x.Sum(x => x.Alacak)
+                    }).ToList();
+
                 if (bakiyesiOlmayanlariGizle)
                 {
                     all = all.Where(x => x.ReelBakiye != 0).ToList();
